@@ -20,6 +20,14 @@
                 "isDefault": true,
                 "problemMatcher": "$gcc"
             }
+        },
+        {
+            "label": "Install CLI app",
+            "type": "shell",
+            "command": "cd ${cwd} && cd build && sudo make install",
+            "dependsOn": [
+                "Build CLI app - RELEASE 🔥"
+            ]
         }
     ]
 }

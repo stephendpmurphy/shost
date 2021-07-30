@@ -21,7 +21,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 add_executable(mpsse-cli ${PROJECT_SOURCE_DIR}/src/mpsse-cli.c)
 
 # Link against the MPSSE lib
-target_link_libraries(mpsse-cli MPSSE dl)
+target_link_libraries(mpsse-cli MPSSE dl ftd2xx)
 
 # Install the cli app to our bin folder
 install(TARGETS mpsse-cli DESTINATION bin)

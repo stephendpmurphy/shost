@@ -11,12 +11,19 @@
 #include "ftd2xx.h"
 #include "libMPSSE_spi.h"
 
+#define NUM_CLI_OPTIONS 2
+
 #define delete_module(name, flags) syscall(__NR_delete_module, name, flags)
 
 #define APP_CHECK_STATUS(exp) {if(exp!=FT_OK){printf("%s:%d:%s(): status(0x%x) \
 != FT_OK\n",__FILE__, __LINE__, __FUNCTION__,exp);exit(1);}else{;}};
 #define CHECK_NULL(exp){if(exp==NULL){printf("%s:%d:%s():  NULL expression \
 encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
+
+const char cli_options[NUM_CLI_OPTIONS][128] = {
+    "list - Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
+    "help - Displays this help menu."
+};
 
 int checkIfFtdiModuleLoaded(void) {
     FILE *fp;
@@ -60,7 +67,7 @@ uint32 getMPSSEchannelCount(void) {
     // create the device information list
     ftStatus = FT_CreateDeviceInfoList(&numDevs);
     APP_CHECK_STATUS(ftStatus);
-    printf("Number of devices FTDI devices connected: %d\n",numDevs);
+    printf("Number of FTDI devices connected: %d\n",numDevs);
     // retrieve the number of devices that are capable of MPSSE
     ftStatus = SPI_GetNumChannels(&channels);
     APP_CHECK_STATUS(ftStatus);
@@ -90,11 +97,19 @@ uint32 printMPSSEchannelInfo(int channels) {
     }
 }
 
+void printCLIoptions(void) {
+    printf("available CLI options:\n");
+    for(int i = 0; i < NUM_CLI_OPTIONS; i++) {
+        printf("    %s\n", cli_options[i]);
+    }
+}
+
 int main(int argc, char *argv[] ) {
     FT_STATUS status = FT_OK;
     uint32 channels = 0;
 
-    // Check if the FTDI serial module is loaded. If so, remove it. (This currently requires sudo)
+    // Check if the FTDI serial module is loaded. If so, remove it.
+    // This requires sudo when running after a build. Not required when installed.
     if (checkIfFtdiModuleLoaded() > 0) {
         removeFtdiModule();
     }
@@ -110,6 +125,9 @@ int main(int argc, char *argv[] ) {
             channels = getMPSSEchannelCount();
             if( channels )
                 printMPSSEchannelInfo(channels);
+        }
+        else if( strcmp(argv[argi], "help") == 0 ) {
+            printCLIoptions();
         }
         else {
             printf("Invalid argument: \"%s\"\n", argv[argi]);

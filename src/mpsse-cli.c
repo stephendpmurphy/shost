@@ -65,11 +65,33 @@ uint32 getMPSSEchannelCount(void) {
     ftStatus = SPI_GetNumChannels(&channels);
     APP_CHECK_STATUS(ftStatus);
     printf("Number of available MPSSE channels: %d\n", (int)channels);
+
+    return channels;
+}
+
+uint32 printMPSSEchannelInfo(int channels) {
+    FT_STATUS ftStatus;
+    FT_DEVICE_LIST_INFO_NODE devList = {0};
+    // Iterate through the channels and print their info
+    if (channels > 0) {
+        for(uint32 i = 0; i < channels; i++) {
+            ftStatus = SPI_GetChannelInfo(i, &devList);
+            APP_CHECK_STATUS(ftStatus);
+            printf("Information on channel number %d:\n", i);
+            /* print the dev info */
+            printf("    Flags=0x%x\n", devList.Flags);
+            printf("    Type=0x%x\n", devList.Type);
+            printf("    ID=0x%x\n", devList.ID);
+            printf("    LocId=0x%x\n", devList.LocId);
+            printf("    SerialNumber=%s\n", devList.SerialNumber);
+            printf("    Description=%s\n", devList.Description);
+            printf("    ftHandle=0x%x\n", (unsigned int)devList.ftHandle); /*is 0 unless open*/
+        }
+    }
 }
 
 int main(int argc, char *argv[] ) {
     FT_STATUS status = FT_OK;
-    FT_DEVICE_LIST_INFO_NODE devList = {0};
     uint32 channels = 0;
 
     // Check if the FTDI serial module is loaded. If so, remove it. (This currently requires sudo)
@@ -82,24 +104,20 @@ int main(int argc, char *argv[] ) {
     Init_libMPSSE();
 #endif
 
-    // Reterieve the number of available MPSSE channels
-    channels = getMPSSEchannelCount();
-
-    // Iterate through the channels and print their info
-    if (channels > 0) {
-        for(uint32 i = 0; i < channels; i++) {
-            status = SPI_GetChannelInfo(i, &devList);
-            APP_CHECK_STATUS(status);
-            printf("Information on channel number %d:\n", i);
-            /* print the dev info */
-            printf("    Flags=0x%x\n", devList.Flags);
-            printf("    Type=0x%x\n", devList.Type);
-            printf("    ID=0x%x\n", devList.ID);
-            printf("    LocId=0x%x\n", devList.LocId);
-            printf("    SerialNumber=%s\n", devList.SerialNumber);
-            printf("    Description=%s\n", devList.Description);
-            printf("    ftHandle=0x%x\n", (unsigned int)devList.ftHandle); /*is 0 unless open*/
+    // Loop through the arguments received and process them
+    for(int argi = 1; argi < argc; argi++) {
+        if( strcmp(argv[argi], "list") == 0 ) {
+            channels = getMPSSEchannelCount();
+            if( channels )
+                printMPSSEchannelInfo(channels);
         }
+        else {
+            printf("Invalid argument: \"%s\"\n", argv[argi]);
+        }
+    }
+
+    if( argc <= 1 ) {
+        printf("Please provide an argument.\n");
     }
 
 #ifdef _MSC_VER

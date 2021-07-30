@@ -22,7 +22,7 @@
             }
         },
         {
-            "label": "Install CLI app",
+            "label": "Install CLI app 💾",
             "type": "shell",
             "command": "cd ${cwd} && cd build && sudo make install",
             "dependsOn": [

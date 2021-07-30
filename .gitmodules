@@ -1,0 +1,3 @@
+[submodule "libMPSSE"]
+	path = libMPSSE
+	url = https://github.com/stephendpmurphy/libMPSSE.git

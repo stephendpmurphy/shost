@@ -1,0 +1,25 @@
+{
+    "version" : "2.0.0",
+    "tasks": [
+        {
+            "label": "Build CLI app - RELEASE 🔥",
+            "type": "shell",
+            "command": "cd ${cwd} && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j12",
+            "group" : {
+                "kind": "build",
+                "isDefault": false,
+                "problemMatcher": "$gcc"
+            }
+        },
+        {
+            "label": "Build CLI app - DEBUG 🐞",
+            "type": "shell",
+            "command": "cd ${cwd} && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j12",
+            "group" : {
+                "kind": "build",
+                "isDefault": true,
+                "problemMatcher": "$gcc"
+            }
+        }
+    ]
+}

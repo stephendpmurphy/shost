@@ -1,6 +1,6 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -11,7 +11,8 @@
 #include "ftd2xx.h"
 #include "libMPSSE_spi.h"
 
-#define NUM_CLI_OPTIONS 2
+#define NUM_CLI_OPTIONS 3
+#define NUM_CLI_SUBCMDS 1
 
 #define delete_module(name, flags) syscall(__NR_delete_module, name, flags)
 
@@ -20,9 +21,49 @@
 #define CHECK_NULL(exp){if(exp==NULL){printf("%s:%d:%s():  NULL expression \
 encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
 
-const char cli_options[NUM_CLI_OPTIONS][128] = {
-    "list - Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
-    "help - Displays this help menu."
+int8 CB_printCliVersion(int argc, char *argv[]);
+int8 CB_printFTDIdevices(int argc, char *argv[]);
+int8 CB_printCLIoptions(int argc, char *argv[]);
+
+// Create a function pointer type to use for cmd callbacks.
+typedef int8(*cli_cmd_callback_fp)(int argc, char *argv[]);
+
+typedef struct {
+    char cmd_short[64];
+    char cmd_full[64];
+    char desc[128];
+    cli_cmd_callback_fp cb;
+} cli_cmds_t;
+
+const cli_cmds_t cli_options[NUM_CLI_OPTIONS] = {
+    {
+        .cmd_short = "-l",
+        .cmd_full = "--list",
+        .desc = "Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
+        .cb = CB_printFTDIdevices
+    },
+    {
+        .cmd_short = "-v",
+        .cmd_full = "--version",
+        .desc = "Displays the current cli version.",
+        .cb = CB_printCliVersion
+    },
+        {
+        .cmd_short = "-h",
+        .cmd_full = "--help",
+        .desc = "Displays this help menu.",
+        .cb = CB_printCLIoptions
+    },
+
+};
+
+const cli_cmds_t cli_subcmds[NUM_CLI_SUBCMDS] = {
+    {
+        .cmd_short = "",
+        .cmd_full = "spi",
+        .desc = "Initiate a SPI read or write transfer.",
+        .cb = NULL
+    }
 };
 
 int checkIfFtdiModuleLoaded(void) {
@@ -97,16 +138,58 @@ uint32 printMPSSEchannelInfo(int channels) {
     }
 }
 
-void printCLIoptions(void) {
-    printf("available CLI options:\n");
+int8 CB_printCliVersion(int argc, char *argv[]) {
+    printf("0.1.0\n");
+}
+
+int8 CB_printFTDIdevices(int argc, char *argv[]) {
+    printMPSSEchannelInfo( getMPSSEchannelCount() );
+}
+
+int8 CB_printCLIoptions(int argc, char *argv[]) {
+    printf("usage: mpsse-cli [-h] [-v] [-l] SUB-COMMAND\n\n");
+
+    if( NUM_CLI_OPTIONS > 0 )
+        printf("options:\n");
+
     for(int i = 0; i < NUM_CLI_OPTIONS; i++) {
-        printf("    %s\n", cli_options[i]);
+        printf("    ");
+        if( strlen(cli_options[i].cmd_short) > 0 )
+            printf("%s, ", cli_options[i].cmd_short);
+
+        if( strlen(cli_options[i].cmd_full) > 0 )
+            printf("%s", cli_options[i].cmd_full);
+
+        printf(" - %s\n", cli_options[i].desc);
     }
+
+    if( NUM_CLI_SUBCMDS > 0 )
+        printf("\n\nsub-commands:\n");
+
+    for(int i = 0; i < NUM_CLI_SUBCMDS; i++) {
+        printf("    ");
+        if( strlen(cli_subcmds[i].cmd_short) > 0 )
+            printf("%s, ", cli_subcmds[i].cmd_short);
+
+        if( strlen(cli_subcmds[i].cmd_full) > 0 )
+            printf("%s", cli_subcmds[i].cmd_full);
+
+        printf(" - %s\n", cli_subcmds[i].desc);
+    }
+    printf("\n\n");
 }
 
 int main(int argc, char *argv[] ) {
     FT_STATUS status = FT_OK;
     uint32 channels = 0;
+    int cmd_found = 0;
+    int retVal = -1;
+
+    if( argc <= 1 ) {
+        printf("Please provide an argument.\n");
+        retVal = -1;
+        goto CLI_CLEANUP;
+    }
 
     // Check if the FTDI serial module is loaded. If so, remove it.
     // This requires sudo when running after a build. Not required when installed.
@@ -119,27 +202,53 @@ int main(int argc, char *argv[] ) {
     Init_libMPSSE();
 #endif
 
-    // Loop through the arguments received and process them
-    for(int argi = 1; argi < argc; argi++) {
-        if( strcmp(argv[argi], "list") == 0 ) {
-            channels = getMPSSEchannelCount();
-            if( channels )
-                printMPSSEchannelInfo(channels);
-        }
-        else if( strcmp(argv[argi], "help") == 0 ) {
-            printCLIoptions();
-        }
-        else {
-            printf("Invalid argument: \"%s\"\n", argv[argi]);
+    // Process the first cmd option.. It should either be a cli option or a sub-command
+    for(int opt_i = 0; opt_i < NUM_CLI_OPTIONS; opt_i++) {
+        if( ( (strlen(cli_options[opt_i].cmd_full) > 0) && (strcmp(argv[1], cli_options[opt_i].cmd_full) == 0) ) ||
+            ( (strlen(cli_options[opt_i].cmd_short) > 0) && (strcmp(argv[1], cli_options[opt_i].cmd_short) == 0) ) ) {
+            // Mark our flag saying we found a matching command.
+            cmd_found = 1;
+            // The command matched.. Execute the associated callback with that command.
+            if( cli_options[opt_i].cb != NULL ) {
+                retVal = cli_options[opt_i].cb(0, NULL);
+                goto CLI_CLEANUP;
+            }
+            else {
+                printf("No callback associated with that option.\n");
+                retVal = -1;
+                goto CLI_CLEANUP;
+            }
         }
     }
 
-    if( argc <= 1 ) {
-        printf("Please provide an argument.\n");
+    // Process the first cmd option.. It should either be a cli option or a sub-command
+    for(int i = 0; i < NUM_CLI_SUBCMDS; i++) {
+        if( ( (strlen(cli_subcmds[i].cmd_full) > 0) && (strcmp(argv[1], cli_subcmds[i].cmd_full) == 0) ) ||
+            ( (strlen(cli_subcmds[i].cmd_short) > 0) && (strcmp(argv[1], cli_subcmds[i].cmd_short) == 0) ) ) {
+            // Mark our flag saying we found a matching command.
+            cmd_found = 1;
+            // The command matched.. Execute the associated callback with that command.
+            if( cli_subcmds[i].cb != NULL ) {
+                retVal = cli_subcmds[i].cb(0, NULL);
+                goto CLI_CLEANUP;
+            }
+            else {
+                printf("No callback associated with that sub-command.\n");
+                retVal = -1;
+                goto CLI_CLEANUP;
+            }
+        }
     }
+
+    // We made it this far.. Assume no valid argument was given.
+    printf("Invalid arguments given.\n");
+    retVal = -1;
+
+CLI_CLEANUP:
 
 #ifdef _MSC_VER
     Cleanup_libMPSSE();
 #endif
-    return 0;
+
+    return retVal;
 }

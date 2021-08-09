@@ -354,7 +354,7 @@ SPI_XFER:
                 goto SPI_CLEANUP;
             }
             printf("Starting a READ on channel %d with a len of %d bytes at %dHz.\n", spi_transfer.channel, spi_transfer.len, spi_transfer.clk);
-            spi_read(&spi_transfer);
+            retVal = spi_read(&spi_transfer);
             printf("%d bytes read over spi.\n", spi_transfer.bytesTranferred);
             printfArray(spi_transfer.buff, spi_transfer.bytesTranferred);
             break;
@@ -366,7 +366,7 @@ SPI_XFER:
                 goto SPI_CLEANUP;
             }
             printf("Starting a WRITE on channel %d with a len of %d bytes at %dHz.\n", spi_transfer.channel, spi_transfer.len, spi_transfer.clk);
-            spi_write(&spi_transfer);
+            retVal = spi_write(&spi_transfer);
             printf("%d bytes written over spi.\n", spi_transfer.bytesTranferred);
             break;
 

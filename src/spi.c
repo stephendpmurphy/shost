@@ -4,7 +4,7 @@
 #include "mpsse-cli.h"
 #include "libMPSSE_spi.h"
 
-#define NUM_SPI_OPTIONS 5
+#define NUM_SPI_OPTIONS 6
 #define MAX_BUFF_SIZE 256
 
 typedef enum {
@@ -52,6 +52,12 @@ const cli_cmd_t spi_options[NUM_SPI_OPTIONS] = {
         .cb = NULL
     },
     {
+        .cmd_short = "-l",
+        .cmd_full = "--len",
+        .desc = "Number of bytes to read/write",
+        .cb = NULL
+    },
+    {
         .cmd_short = "-d",
         .cmd_full = "--data",
         .desc = "Data to be written. Command delimeted list in hex. example: \'mpsse-cli spi -c 0 -x w -l 8 -d 0xDD,0xEE,0xAA,0xDD,0xBB,0xEE,0xEE,0xFF\'",
@@ -72,6 +78,7 @@ static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) 
     int listLength = 0;
     int lastCommaIndex = 0;
     char hexCharacter[5] = {0x00};
+    int index = 0;
 
     if( (arg == NULL) || (destBuff == NULL) ) {
         printf("NULL pointer passed.\n");
@@ -95,8 +102,8 @@ static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) 
             lastCommaIndex = i+1;
 
             // Now attempt to parse the character
-            destBuff[*buffIndex] = strtol(hexCharacter, NULL, 16);
-            *buffIndex = *buffIndex+1;
+            destBuff[index] = strtol(hexCharacter, NULL, 16);
+            index++;
         }
 
         // We can safely assume that if our index gets too far from the last
@@ -107,7 +114,51 @@ static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) 
         }
     }
 
-    // printfArray(destBuff, buffIndex);
+    // Only update the index if it is zero
+    if( *buffIndex <= 0 ) {
+        *buffIndex = index;
+    }
+
+    return 0;
+}
+
+static int8 spi_read(spi_xfer_t *xfer) {
+    FT_STATUS status = FT_OK;
+    ChannelConfig channelConf = {0};
+    FT_DEVICE_LIST_INFO_NODE devList = {0};
+    uint32 channels = 0;
+
+    channelConf.ClockRate = xfer->clk;
+    channelConf.LatencyTimer = 255;
+    channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
+    channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
+
+    // Make sure we even have enough channels
+    status = SPI_GetNumChannels(&channels);
+
+    if( channels <= 0 ) {
+        printf("No MPSSE channels available.\n");
+        return -1;
+    }
+    else if( xfer->channel > (channels - 1) ) {
+        printf("Invalid channel. Only %d channel(s) available.\n", channels);
+        return -1;
+    }
+
+    status = SPI_GetChannelInfo(xfer->channel, &devList);
+    APP_CHECK_STATUS(status);
+
+    status = SPI_OpenChannel(xfer->channel, &devList.ftHandle);
+    APP_CHECK_STATUS(status);
+
+    status = SPI_InitChannel(devList.ftHandle, &channelConf);
+    APP_CHECK_STATUS(status);
+
+    status = SPI_Read(devList.ftHandle, (uint8 *)&xfer->buff, xfer->len, &xfer->bytesTranferred,
+        SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES |
+        SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE |
+        SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE );
+    APP_CHECK_STATUS(status);
 
     return 0;
 }
@@ -234,6 +285,16 @@ int8 spi_processCmd(int argc, char *argv[]) {
                 spi_transfer.clk = strtol(argv[i+1], NULL, 10);
             }
         }
+        else if( (strcmp(argv[i], "-l") == 0) || (strcmp(argv[i], "--len") == 0)) {
+            if( (i+1) >= argc ) {
+                printf("-l option found, but no value given.\n");
+                retVal = -1;
+                goto SPI_CLEANUP;
+            }
+            else {
+                spi_transfer.len = strtol(argv[i+1], NULL, 10);
+            }
+        }
         else if( (strcmp(argv[i], "-d") == 0) || (strcmp(argv[i], "--data") == 0)) {
             if( (i+1) >= argc ) {
                 printf("Please provide data to be transfered when using the -d option.\n");
@@ -286,6 +347,16 @@ int8 spi_processCmd(int argc, char *argv[]) {
 SPI_XFER:
     switch( spi_transfer.xferType ) {
         case SPI_XFER_READ:
+            if( spi_transfer.len < 1 ) {
+
+                printf("You must provide a len to execute a \"read\" transfer.\n");
+                retVal = -1;
+                goto SPI_CLEANUP;
+            }
+            printf("Starting a READ on channel %d with a len of %d bytes at %dHz.\n", spi_transfer.channel, spi_transfer.len, spi_transfer.clk);
+            spi_read(&spi_transfer);
+            printf("%d bytes read over spi.\n", spi_transfer.bytesTranferred);
+            printfArray(spi_transfer.buff, spi_transfer.bytesTranferred);
             break;
 
         case SPI_XFER_WRITE:
@@ -294,7 +365,7 @@ SPI_XFER:
                 retVal = -1;
                 goto SPI_CLEANUP;
             }
-            printf("Starting a write on channel %d with a len of %d bytes at %dHz.\n", spi_transfer.channel, spi_transfer.len, spi_transfer.clk);
+            printf("Starting a WRITE on channel %d with a len of %d bytes at %dHz.\n", spi_transfer.channel, spi_transfer.len, spi_transfer.clk);
             spi_write(&spi_transfer);
             printf("%d bytes written over spi.\n", spi_transfer.bytesTranferred);
             break;

@@ -122,17 +122,13 @@ static uint32 printMPSSEchannelInfo(int channels) {
 }
 
 int8 checkIfArgIsOption(char *arg) {
-    char firstChar = 0x00;
-
     if( arg == NULL )
      return -1;
 
     // Make sure the provided arg is actually there
     if( strlen(arg) > 0 ) {
-        // Grab the first character
-        memcpy(&firstChar, arg, 0x01);
-        // We have SOMETHING.. Check that the first character is at least a "-".
-        if( !strcmp(&firstChar, "-") ) {
+        // Check that the first character is at least a "-".
+        if(strncmp(arg, "-", 1) == 0 ) {
             return 0;
         }
         else {

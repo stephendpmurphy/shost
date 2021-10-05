@@ -5,24 +5,6 @@
 #include "libMPSSE_spi.h"
 
 #define NUM_SPI_OPTIONS 6
-#define MAX_BUFF_SIZE 256
-
-typedef enum {
-    SPI_XFER_NONE = 0x00,
-    SPI_XFER_WRITE,
-    SPI_XFER_READ,
-    SPI_XFER_READ_WRITE,
-    SPI_XFER__MAX__
-} spi_xfer_type_t;
-
-typedef struct {
-    int clk;
-    int channel;
-    int len;
-    int bytesTranferred;
-    spi_xfer_type_t xferType;
-    uint8 buff[MAX_BUFF_SIZE];
-} spi_xfer_t;
 
 int8 CB_printSPIclioptions(int argc, char *argv[]);
 
@@ -74,55 +56,7 @@ static void printfArray(uint8 *buff, uint16 len) {
     printf("\n");
 }
 
-static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) {
-    int listLength = 0;
-    int lastCommaIndex = 0;
-    char hexCharacter[5] = {0x00};
-    int index = 0;
-
-    if( (arg == NULL) || (destBuff == NULL) ) {
-        printf("NULL pointer passed.\n");
-        return -1;
-    }
-
-    listLength = strlen(arg);
-
-    // Loop through the list of characters processing until we find a comma
-    for(int i = 0; i <= listLength; i++) {
-
-        if( (!memcmp(&arg[i], ",", 0x01)) && (i == listLength-1))  {
-            printf("Trailing comma on data list.\n");
-            return -1;
-        }
-        else if( (!memcmp(&arg[i], ",", 0x01)) || (i == listLength) ) {
-            // We found a comma. grab the substring from last commad
-            // to our current index and try to parse it as a hex value
-            memcpy(hexCharacter, &arg[lastCommaIndex], i - lastCommaIndex);
-            // Store the new "lastCommaIndex" value
-            lastCommaIndex = i+1;
-
-            // Now attempt to parse the character
-            destBuff[index] = strtol(hexCharacter, NULL, 16);
-            index++;
-        }
-
-        // We can safely assume that if our index gets too far from the last
-        // comma index.. Then something is wrong with the list
-        if( (i - lastCommaIndex) > 4) {
-            printf("Something is wrong with the provided list. Ensure no commas are missing in list.\n");
-            return -1;
-        }
-    }
-
-    // Only update the index if it is zero
-    if( *buffIndex <= 0 ) {
-        *buffIndex = index;
-    }
-
-    return 0;
-}
-
-static int8 spi_read(spi_xfer_t *xfer) {
+static int8 spi_read(xfer_t *xfer) {
     FT_STATUS status = FT_OK;
     ChannelConfig channelConf = {0};
     FT_DEVICE_LIST_INFO_NODE devList = {0};
@@ -163,7 +97,7 @@ static int8 spi_read(spi_xfer_t *xfer) {
     return 0;
 }
 
-static int8 spi_write(spi_xfer_t *xfer) {
+static int8 spi_write(xfer_t *xfer) {
     FT_STATUS status = FT_OK;
     ChannelConfig channelConf = {0};
     FT_DEVICE_LIST_INFO_NODE devList = {0};
@@ -226,7 +160,7 @@ int8 CB_printSPIclioptions(int argc, char *argv[]) {
 
 int8 spi_processCmd(int argc, char *argv[]) {
     int retVal = -1;
-    spi_xfer_t spi_transfer = {0x00};
+    xfer_t spi_transfer = {0x00};
 
     spi_transfer.channel = 0;
     spi_transfer.clk = 100000;
@@ -278,7 +212,7 @@ int8 spi_processCmd(int argc, char *argv[]) {
         }
         else if( (strcmp(argv[i], "-f") == 0) || (strcmp(argv[i], "--freq") == 0)) {
             if( (i+1) >= argc ) {
-                printf("No channel given. Defaulting to 100kb/s.\n");
+                printf("No frequency given. Defaulting to 100kb/s.\n");
                 spi_transfer.clk = 100000;
             }
             else {
@@ -325,13 +259,13 @@ int8 spi_processCmd(int argc, char *argv[]) {
             }
 
             if( (strcmp(argv[i+1], "r") == 0) ) {
-                spi_transfer.xferType = SPI_XFER_READ;
+                spi_transfer.xferType = XFER_READ;
             }
             else if( (strcmp(argv[i+1], "w") == 0) ) {
-                spi_transfer.xferType = SPI_XFER_WRITE;
+                spi_transfer.xferType = XFER_WRITE;
             }
             else if( (strcmp(argv[i+1], "rw") == 0) ) {
-                spi_transfer.xferType = SPI_XFER_READ_WRITE;
+                spi_transfer.xferType = XFER_READ_WRITE;
             }
             else {
                 printf("Invalid xfer type given: %s\n", argv[i+1]);
@@ -346,7 +280,7 @@ int8 spi_processCmd(int argc, char *argv[]) {
 
 SPI_XFER:
     switch( spi_transfer.xferType ) {
-        case SPI_XFER_READ:
+        case XFER_READ:
             if( spi_transfer.len < 1 ) {
 
                 printf("You must provide a len to execute a \"read\" transfer.\n");
@@ -359,7 +293,7 @@ SPI_XFER:
             printfArray(spi_transfer.buff, spi_transfer.bytesTranferred);
             break;
 
-        case SPI_XFER_WRITE:
+        case XFER_WRITE:
             if( spi_transfer.len < 1 ) {
                 printf("You must provide a buffer to execute a \"write\" transfer.\n");
                 retVal = -1;
@@ -370,7 +304,7 @@ SPI_XFER:
             printf("%d bytes written over spi.\n", spi_transfer.bytesTranferred);
             break;
 
-        case SPI_XFER_READ_WRITE:
+        case XFER_READ_WRITE:
             break;
 
         default:

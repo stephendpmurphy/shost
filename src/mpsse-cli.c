@@ -9,9 +9,10 @@
 #include <unistd.h>
 #include "mpsse-cli.h"
 #include "spi.h"
+#include "i2c.h"
 
 #define NUM_CLI_OPTIONS 3
-#define NUM_CLI_SUBCMDS 1
+#define NUM_CLI_SUBCMDS 2
 
 int8 CB_printCliVersion(int argc, char *argv[]);
 int8 CB_printFTDIdevices(int argc, char *argv[]);
@@ -45,7 +46,13 @@ const cli_cmd_t cli_subcmds[NUM_CLI_SUBCMDS] = {
         .cmd_full = "spi",
         .desc = "Initiate a SPI read or write transfer.",
         .cb = spi_processCmd
-    }
+    },
+    {
+        .cmd_short = "",
+        .cmd_full = "i2c",
+        .desc = "Initiate I²C for read or write transfer.",
+        .cb = i2c_processCmd
+    },
 };
 
 static int checkIfFtdiModuleLoaded(void) {
@@ -250,4 +257,52 @@ CLI_CLEANUP:
     Cleanup_libMPSSE();
 
     return retVal;
+}
+
+int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) {
+    int listLength = 0;
+    int lastCommaIndex = 0;
+    char hexCharacter[5] = {0x00};
+    int index = 0;
+
+    if( (arg == NULL) || (destBuff == NULL) ) {
+        printf("NULL pointer passed.\n");
+        return -1;
+    }
+
+    listLength = strlen(arg);
+
+    // Loop through the list of characters processing until we find a comma
+    for(int i = 0; i <= listLength; i++) {
+
+        if( (!memcmp(&arg[i], ",", 0x01)) && (i == listLength-1))  {
+            printf("Trailing comma on data list.\n");
+            return -1;
+        }
+        else if( (!memcmp(&arg[i], ",", 0x01)) || (i == listLength) ) {
+            // We found a comma. grab the substring from last commad
+            // to our current index and try to parse it as a hex value
+            memcpy(hexCharacter, &arg[lastCommaIndex], i - lastCommaIndex);
+            // Store the new "lastCommaIndex" value
+            lastCommaIndex = i+1;
+
+            // Now attempt to parse the character
+            destBuff[index] = strtol(hexCharacter, NULL, 16);
+            index++;
+        }
+
+        // We can safely assume that if our index gets too far from the last
+        // comma index.. Then something is wrong with the list
+        if( (i - lastCommaIndex) > 4) {
+            printf("Something is wrong with the provided list. Ensure no commas are missing in list.\n");
+            return -1;
+        }
+    }
+
+    // Only update the index if it is zero
+    if( *buffIndex <= 0 ) {
+        *buffIndex = index;
+    }
+
+    return 0;
 }

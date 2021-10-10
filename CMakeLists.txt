@@ -19,7 +19,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 
 set(APP_SRC ${PROJECT_SOURCE_DIR}/src/mpsse-cli.c
             ${PROJECT_SOURCE_DIR}/src/spi.c
-            ${PROJECT_SOURCE_DIR}/src/i2c.c)
+            ${PROJECT_SOURCE_DIR}/src/i2c.c
+            ${PROJECT_SOURCE_DIR}/src/cli.c
+        )
 
 # Create our executable
 add_executable(mpsse-cli ${APP_SRC})

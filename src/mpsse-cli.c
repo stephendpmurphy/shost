@@ -10,50 +10,7 @@
 #include "mpsse-cli.h"
 #include "spi.h"
 #include "i2c.h"
-
-#define NUM_CLI_OPTIONS 3
-#define NUM_CLI_SUBCMDS 2
-
-int8 CB_printCliVersion(int argc, char *argv[]);
-int8 CB_printFTDIdevices(int argc, char *argv[]);
-int8 CB_printCLIoptions(int argc, char *argv[]);
-
-const cli_cmd_t cli_options[NUM_CLI_OPTIONS] = {
-    {
-        .cmd_short = "-l",
-        .cmd_full = "--list",
-        .desc = "Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
-        .cb = CB_printFTDIdevices
-    },
-    {
-        .cmd_short = "-v",
-        .cmd_full = "--version",
-        .desc = "Displays the current cli version.",
-        .cb = CB_printCliVersion
-    },
-        {
-        .cmd_short = "-h",
-        .cmd_full = "--help",
-        .desc = "Displays this help menu.",
-        .cb = CB_printCLIoptions
-    },
-
-};
-
-const cli_cmd_t cli_subcmds[NUM_CLI_SUBCMDS] = {
-    {
-        .cmd_short = "",
-        .cmd_full = "spi",
-        .desc = "Initiate a SPI read or write transfer.",
-        .cb = spi_processCmd
-    },
-    {
-        .cmd_short = "",
-        .cmd_full = "i2c",
-        .desc = "Initiate I²C for read or write transfer.",
-        .cb = i2c_processCmd
-    },
-};
+#include "cli.h"
 
 static int checkIfFtdiModuleLoaded(void) {
     FILE *fp;
@@ -107,7 +64,7 @@ static uint32 getMPSSEchannelCount(void) {
     return channels;
 }
 
-static uint32 printMPSSEchannelInfo(int channels) {
+static void printMPSSEchannelInfo(int channels) {
     FT_STATUS ftStatus;
     FT_DEVICE_LIST_INFO_NODE devList = {0};
     // Iterate through the channels and print their info
@@ -128,79 +85,31 @@ static uint32 printMPSSEchannelInfo(int channels) {
     }
 }
 
-int8 checkIfArgIsOption(char *arg) {
-    if( arg == NULL )
-     return -1;
-
-    // Make sure the provided arg is actually there
-    if( strlen(arg) > 0 ) {
-        // Check that the first character is at least a "-".
-        if(strncmp(arg, "-", 1) == 0 ) {
-            return 0;
-        }
-        else {
-            return -1;
-        }
-    }
-    else {
-        return -1;
-    }
-}
-
-int8 CB_printCliVersion(int argc, char *argv[]) {
+int CB_printCliVersion(arg_t* arg) {
     printf("0.1.0\n");
+    return 0;
 }
 
-int8 CB_printFTDIdevices(int argc, char *argv[]) {
+int CB_printFTDIdevices(arg_t* arg) {
     printMPSSEchannelInfo( getMPSSEchannelCount() );
-}
-
-int8 CB_printCLIoptions(int argc, char *argv[]) {
-    printf("usage: mpsse-cli [...option] [...sub-command [...option]]\n\n");
-
-    if( NUM_CLI_OPTIONS > 0 )
-        printf("options:\n");
-
-    for(int i = 0; i < NUM_CLI_OPTIONS; i++) {
-        printf("    ");
-        if( strlen(cli_options[i].cmd_short) > 0 )
-            printf("%s, ", cli_options[i].cmd_short);
-
-        if( strlen(cli_options[i].cmd_full) > 0 )
-            printf("%s", cli_options[i].cmd_full);
-
-        printf(" - %s\n", cli_options[i].desc);
-    }
-
-    if( NUM_CLI_SUBCMDS > 0 )
-        printf("\n\nsub-commands:\n");
-
-    for(int i = 0; i < NUM_CLI_SUBCMDS; i++) {
-        printf("    ");
-        if( strlen(cli_subcmds[i].cmd_short) > 0 )
-            printf("%s, ", cli_subcmds[i].cmd_short);
-
-        if( strlen(cli_subcmds[i].cmd_full) > 0 )
-            printf("%s", cli_subcmds[i].cmd_full);
-
-        printf(" - %s\n", cli_subcmds[i].desc);
-    }
-    printf("\n\n");
+    return 0;
 }
 
 int main(int argc, char *argv[] ) {
-    FT_STATUS status = FT_OK;
-    uint32 channels = 0;
-    int cmd_found = 0;
     int retVal = -1;
+    arg_t arg = {
+            .clk = 100000,
+            .channel = 0,
+    };
 
-    if( argc <= 1 ) {
-        printf("Please provide an argument.\n\n");
-        (void)CB_printCLIoptions(0, NULL);
-        retVal = -1;
-        goto CLI_CLEANUP;
+    // prase the cli to a usable object
+    if (parsecli(argc, argv, &arg) < 0) {
+        printf("Please provide at least one option and value.\n\n");
+        // print help screen to help the user
+        arg.type = ARG_HELP;
     }
 
+    // TODO should not be called if not needed (for instance when calling -v or -h)
     // Check if the FTDI serial module is loaded. If so, remove it.
     // This requires sudo when running after a build. Not required when installed.
     if (checkIfFtdiModuleLoaded() > 0) {
@@ -210,99 +119,31 @@ int main(int argc, char *argv[] ) {
     /* init library */
     Init_libMPSSE();
 
-    // Process the first cmd option.. It should either be a cli option or a sub-command
-    for(int opt_i = 0; opt_i < NUM_CLI_OPTIONS; opt_i++) {
-        if( ( (strlen(cli_options[opt_i].cmd_full) > 0) && (strcmp(argv[1], cli_options[opt_i].cmd_full) == 0) ) ||
-            ( (strlen(cli_options[opt_i].cmd_short) > 0) && (strcmp(argv[1], cli_options[opt_i].cmd_short) == 0) ) ) {
-            // Mark our flag saying we found a matching command.
-            cmd_found = 1;
-            // The command matched.. Execute the associated callback with that command.
-            if( cli_options[opt_i].cb != NULL ) {
-                retVal = cli_options[opt_i].cb(argc - 2, &argv[2]);
-                goto CLI_CLEANUP;
-            }
-            else {
-                printf("No callback associated with that option.\n");
-                retVal = -1;
-                goto CLI_CLEANUP;
-            }
-        }
+    // call correct function for subcommand or option
+    switch (arg.type) {
+        case ARG_SPI:
+            retVal = spi_processCmd(&arg);
+        break;
+        case ARG_I2C:
+            retVal = i2c_processCmd(&arg);
+        break;
+        case ARG_HELP:
+            retVal = CB_printCLIoptions(&arg);
+        break;
+        case ARG_VERSION:
+            retVal = CB_printCliVersion(&arg);
+        break;
+        case ARG_LIST:
+            retVal = CB_printFTDIdevices(&arg);
+        break;
+        case ARG_NONE:
+        default:
+            // We made it this far.. Assume no valid argument was given.
+            printf("Invalid arguments given.\n");
+            retVal = -1;
     }
-
-    // Process the first cmd option.. It should either be a cli option or a sub-command
-    for(int i = 0; i < NUM_CLI_SUBCMDS; i++) {
-        if( ( (strlen(cli_subcmds[i].cmd_full) > 0) && (strcmp(argv[1], cli_subcmds[i].cmd_full) == 0) ) ||
-            ( (strlen(cli_subcmds[i].cmd_short) > 0) && (strcmp(argv[1], cli_subcmds[i].cmd_short) == 0) ) ) {
-            // Mark our flag saying we found a matching command.
-            cmd_found = 1;
-            // The command matched.. Execute the associated callback with that command.
-            if( cli_subcmds[i].cb != NULL ) {
-                retVal = cli_subcmds[i].cb(argc - 2, &argv[2]);
-                goto CLI_CLEANUP;
-            }
-            else {
-                printf("No callback associated with that sub-command.\n");
-                retVal = -1;
-                goto CLI_CLEANUP;
-            }
-        }
-    }
-
-    // We made it this far.. Assume no valid argument was given.
-    printf("Invalid arguments given.\n");
-    retVal = -1;
-
-CLI_CLEANUP:
 
     Cleanup_libMPSSE();
 
     return retVal;
-}
-
-int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) {
-    int listLength = 0;
-    int lastCommaIndex = 0;
-    char hexCharacter[5] = {0x00};
-    int index = 0;
-
-    if( (arg == NULL) || (destBuff == NULL) ) {
-        printf("NULL pointer passed.\n");
-        return -1;
-    }
-
-    listLength = strlen(arg);
-
-    // Loop through the list of characters processing until we find a comma
-    for(int i = 0; i <= listLength; i++) {
-
-        if( (!memcmp(&arg[i], ",", 0x01)) && (i == listLength-1))  {
-            printf("Trailing comma on data list.\n");
-            return -1;
-        }
-        else if( (!memcmp(&arg[i], ",", 0x01)) || (i == listLength) ) {
-            // We found a comma. grab the substring from last commad
-            // to our current index and try to parse it as a hex value
-            memcpy(hexCharacter, &arg[lastCommaIndex], i - lastCommaIndex);
-            // Store the new "lastCommaIndex" value
-            lastCommaIndex = i+1;
-
-            // Now attempt to parse the character
-            destBuff[index] = strtol(hexCharacter, NULL, 16);
-            index++;
-        }
-
-        // We can safely assume that if our index gets too far from the last
-        // comma index.. Then something is wrong with the list
-        if( (i - lastCommaIndex) > 4) {
-            printf("Something is wrong with the provided list. Ensure no commas are missing in list.\n");
-            return -1;
-        }
-    }
-
-    // Only update the index if it is zero
-    if( *buffIndex <= 0 ) {
-        *buffIndex = index;
-    }
-
-    return 0;
 }

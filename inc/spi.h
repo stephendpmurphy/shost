@@ -3,6 +3,6 @@
 
 #include "libMPSSE_spi.h"
 
-int8 spi_processCmd(int argc, char *argv[]);
+int spi_processCmd(arg_t* arg);
 
 #endif // _SPI_H_

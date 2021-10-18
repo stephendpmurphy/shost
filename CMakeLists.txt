@@ -22,10 +22,10 @@ set(APP_SRC ${PROJECT_SOURCE_DIR}/src/mpsse-cli.c
 )
 
 # Create our executable
-add_executable(mpsse-cli ${APP_SRC})
+add_executable(mpsse ${APP_SRC})
 
 # Link against the MPSSE, dl and ftd2xx libs
-target_link_libraries(mpsse-cli MPSSE dl ftd2xx)
+target_link_libraries(mpsse MPSSE dl ftd2xx)
 
 # Install the cli app to our bin folder
-install(TARGETS mpsse-cli DESTINATION bin)
+install(TARGETS mpsse DESTINATION bin)

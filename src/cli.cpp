@@ -9,77 +9,77 @@
 
 const cli_cmd_t cli_options[NUM_CLI_OPTIONS] = {
         {
-                .cmd_short = "-l",
-                .cmd_full = "--list",
-                .desc = "Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
-                .type = ARG_LIST,
+                "-l",
+                "--list",
+                "Displays number of FTDI devices connected, number of MPSSE channels available and available MPSSE channel information.",
+                ARG_LIST,
         },
         {
-                .cmd_short = "-v",
-                .cmd_full = "--version",
-                .desc = "Displays the current cli version.",
-                .type = ARG_VERSION,
+                "-v",
+                "--version",
+                "Displays the current cli version.",
+                ARG_VERSION,
         },
         {
-                .cmd_short = "-h",
-                .cmd_full = "--help",
-                .desc = "Displays this help menu.",
-                .type = ARG_HELP,
+                "-h",
+                "--help",
+                "Displays this help menu.",
+                ARG_HELP,
         },
         {
-                .cmd_short = "",
-                .cmd_full = "spi",
-                .desc = "Initiate a SPI read or write transfer.",
-                .type = ARG_SPI,
+                "",
+                "spi",
+                "Initiate a SPI read or write transfer.",
+                ARG_SPI,
         },
         {
-                .cmd_short = "",
-                .cmd_full = "i2c",
-                .desc = "Initiate I²C for read or write transfer.",
-                .type = ARG_I2C,
+                "",
+                "i2c",
+                "Initiate I²C for read or write transfer.",
+                ARG_I2C,
         },
 };
 
 const cli_cmd_t sub_options[NUM_SUB_OPTIONS] = {
         {
-                .cmd_short = "-h",
-                .cmd_full = "--help",
-                .desc = "Displays this help menu.",
+                "-h",
+                "--help",
+                "Displays this help menu.",
         },
         {
-                .cmd_short = "-c",
-                .cmd_full = "--channel",
-                .desc = "MPSSE Channel #. (Available channels can be retrieved with mpsse-cli -l)",
+                "-c",
+                "--channel",
+                "MPSSE Channel #. (Available channels can be retrieved with mpsse-cli -l)",
         },
         {
-                .cmd_short = "-f",
-                .cmd_full = "--freq",
-                .desc = "SPI Frequency",
+                "-f",
+                "--freq",
+                "SPI Frequency",
         },
         {
-                .cmd_short = "-x",
-                .cmd_full = "--xfer",
-                .desc = "Set transfer type. [r | w | rw]",
+                "-x",
+                "--xfer",
+                "Set transfer type. [r | w | rw]",
         },
         {
-                .cmd_short = "-l",
-                .cmd_full = "--len",
-                .desc = "Number of bytes to read/write",
+                "-l",
+                "--len",
+                "Number of bytes to read/write",
         },
         {
-                .cmd_short = "-d",
-                .cmd_full = "--data",
-                .desc = "Data to be written. Command delimeted list in hex. example: \'mpsse-cli spi -c 0 -x w -l 8 -d 0xDD,0xEE,0xAA,0xDD,0xBB,0xEE,0xEE,0xFF\'",
+                "-d",
+                "--data",
+                "Data to be written. Command delimeted list in hex. example: \'mpsse-cli spi -c 0 -x w -l 8 -d 0xDD,0xEE,0xAA,0xDD,0xBB,0xEE,0xEE,0xFF\'",
         },
         {
-                .cmd_short = "-a",
-                .cmd_full = "--address",
-                .desc = "I²C address to read/write to",
+                "-a",
+                "--address",
+                "I²C address to read/write to",
         },
         {
-                .cmd_short = "-r",
-                .cmd_full = "--register",
-                .desc = "I²C register to read/write",
+                "-r",
+                "--register",
+                "I²C register to read/write",
         },
 };
 
@@ -115,6 +115,8 @@ int CB_printCLIoptions(arg_t* arg) {
         printf(" - %s\n", sub_options[i].desc);
     }
     printf("\n\n");
+    return 0;
+    // TODO meaningfull return
 }
 
 int parsecli(int argc, char *argv[], arg_t* res) {
@@ -243,6 +245,8 @@ int parsecli(int argc, char *argv[], arg_t* res) {
             printf("Invalid option: %s. Ignoring it and moving on.\n", argv[i]);
         }
     }
+    return 0;
+    // TODO return meaningfull int.
 }
 
 

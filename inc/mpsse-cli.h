@@ -13,4 +13,6 @@ encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
 int CB_printCliVersion(arg_t *arg);
 int CB_printFTDIdevices(arg_t *arg);
 
+static void printfArray(uint8 *buff, uint16 len);
+
 #endif // _MPSSE_CLI_H_

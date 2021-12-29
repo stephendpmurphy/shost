@@ -1,6 +1,9 @@
 # Set min req version of Cmake
 cmake_minimum_required(VERSION 3.16)
 
+# required for C99 designator aggregate initializer
+set(CMAKE_CXX_STANDARD 20)
+
 # Set the project name
 project(mpsse-cli)
 
@@ -17,11 +20,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 
-set(APP_SRC ${PROJECT_SOURCE_DIR}/src/mpsse-cli.c
-            ${PROJECT_SOURCE_DIR}/src/spi.c
-            ${PROJECT_SOURCE_DIR}/src/i2c.c
-            ${PROJECT_SOURCE_DIR}/src/cli.c
-        )
+set(APP_SRC ${PROJECT_SOURCE_DIR}/src/mpsse-cli.cpp
+        ${PROJECT_SOURCE_DIR}/src/SPI.cpp
+        ${PROJECT_SOURCE_DIR}/src/I2C.cpp
+        ${PROJECT_SOURCE_DIR}/src/cli.cpp
+        ${PROJECT_SOURCE_DIR}/src/Protocol.cpp)
 
 # Create our executable
 add_executable(mpsse-cli ${APP_SRC})

@@ -3,11 +3,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include "libMPSSE_spi.h"
 #include "util.h"
+
+void printfArray(uint8 *buff, uint16 len) {
+    printf("Array dump: ");
+    for (int i = 0; i < len; i++) {
+        printf("0x%02X ", buff[i]);
+    }
+
+    printf("\n");
+}
 
 int util_isFtdiModuleLoaded(void) {
     FILE *fp;
@@ -76,7 +86,9 @@ uint32_t util_printMPSSEchannelInfo(int channels) {
             printf("    LocId=0x%x\n", devList.LocId);
             printf("    SerialNumber=%s\n", devList.SerialNumber);
             printf("    Description=%s\n", devList.Description);
-            printf("    ftHandle=0x%x\n", (unsigned int)devList.ftHandle); /*is 0 unless open*/
+            // printf("    ftHandle=%d\n", (unsigned int)devList.ftHandle); /*is 0 unless open*/
         }
     }
+
+    return 0;
 }

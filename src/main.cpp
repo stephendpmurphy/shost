@@ -14,13 +14,15 @@
 #include "xfer.h"
 #include "util.h"
 
+volatile xfer_t xfer = {0x00};
+
 static int parse_opt (int key, char *arg, struct argp_state *state) {
     xfer_t *xfer_ptr = (xfer_t *)&state->input;
 
     switch (key) {
- 		case 'l':
+        case 'l':
             util_printMPSSEchannelInfo( util_getMPSSEchannelCount() );
-			break;
+        break;
         case 'i':
             if((strcmp(arg, "SPI") == 0) || (strcmp(arg, "spi") == 0)) {
                 xfer_ptr->intf = XFER_INTF_SPI;
@@ -50,8 +52,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 xfer_ptr->clk = atoi(arg);
             }
             break;
-	}
-	return 0;
+    }
+    return 0;
 }
 
 int main(int argc, char *argv[] ) {
@@ -61,11 +63,11 @@ int main(int argc, char *argv[] ) {
         {"channel", 'c', "NUM", OPTION_ARG_OPTIONAL, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
         {"frequency", 'f', "NUM", OPTION_ARG_OPTIONAL, "Serial communication freqeuncy"},
         {"xfer", 'x', "r || w || rw", OPTION_ARG_OPTIONAL, "Serial transfer type - Read, Write or Read & Write"},
-        {"data", 'd', "0x00,0x01,0x02 ...", 0, "Comma delimted data to be written in hex."},
+        {"data", 'd', "ARRAY", 0, "Comma delimted data to be written in hex."},
         {0}
     };
 
     struct argp argp = { cli_options, parse_opt };
 
-	return argp_parse (&argp, argc, argv, 0, 0, 0);
+    return argp_parse (&argp, argc, argv, 0, 0, (void *__restrict__)&xfer);
 }

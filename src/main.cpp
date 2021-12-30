@@ -22,7 +22,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'l':
             util_printMPSSEchannelInfo( util_getMPSSEchannelCount() );
-        break;
+            break;
+
         case 'i':
             if((strcmp(arg, "SPI") == 0) || (strcmp(arg, "spi") == 0)) {
                 xfer_ptr->intf = XFER_INTF_SPI;
@@ -34,6 +35,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_failure(state, 0,0,"Invalid serial interface provided.");
             }
             break;
+
         case 'c':
             if(arg == NULL) {
                 printf("No channel value given. Defaulting to channel 0.\n");
@@ -43,6 +45,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 xfer_ptr->channel = atoi(arg);
             }
             break;
+
         case 'f':
             if( arg == NULL ) {
                 printf("No frequency value given. Defaulting to 10kHz.\n");
@@ -51,6 +54,26 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             else {
                 xfer_ptr->clk = atoi(arg);
             }
+            break;
+
+        case 'x':
+            if((strcmp(arg, "W") == 0) || (strcmp(arg, "w") == 0)) {
+                xfer_ptr->xferType = XFER_WRITE;
+            }
+            else if((strcmp(arg, "R") == 0) || (strcmp(arg, "r") == 0)) {
+                xfer_ptr->xferType = XFER_READ;
+            }
+            else if((strcmp(arg, "RW") == 0) || (strcmp(arg, "rw") == 0)) {
+                xfer_ptr->xferType = XFER_READ_WRITE;
+            }
+            else {
+                argp_failure(state, 0,0,"Invalid transmittion type provided.");
+            }
+            break;
+
+
+        case ARGP_KEY_END:
+            xfer_begin(*xfer_ptr);
             break;
     }
     return 0;

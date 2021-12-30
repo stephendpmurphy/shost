@@ -40,4 +40,6 @@ typedef struct {
     uint8_t buff[MAX_BUFF_SIZE];
 } xfer_t;
 
+int xfer_begin(xfer_t xfer);
+
 #endif // _XFER_H_

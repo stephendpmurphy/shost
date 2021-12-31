@@ -29,50 +29,66 @@ int xfer_begin(xfer_t xfer) {
         Init_libMPSSE();
     }
 
-    // Do the transfer
-    if (xfer.xferType == XFER_WRITE) {
-        try {
-            printf("Starting a WRITE using %s on channel %d with a len of %d bytes at %dHz.\n",
+    // Setup the interface class
+    switch (xfer.intf) {
+        case XFER_INTF_SPI:
+            IO = new SPI();
+            break;
+
+        case XFER_INTF_I2C:
+            IO = new I2C();
+            break;
+
+        default:
+            break;
+    }
+
+
+    if ( (xfer.xferType <= XFER_TYPE_NONE) || (xfer.xferType >= XFER_TYPE__MAX__) ) {
+        printf("Invalid transfer type given.\n");
+        retVal = -1;
+    }
+    else {
+        printf("Starting a %s using %s on channel %d with a len of %d bytes at %dHz.\n",
+                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : ""))),
                 IO->name,
                 xfer.channel,
                 xfer.len,
                 xfer.clk);
-            IO->write(&xfer);
-            printf("%d byte(s) written over %s.\n",
-                xfer.bytesTranferred,
+
+        try {
+            switch (xfer.xferType) {
+                case XFER_TYPE_WRITE:
+                    IO->write(&xfer);
+                    break;
+
+                case XFER_TYPE_READ:
+                    IO->read(&xfer);
+                    break;
+
+                case XFER_TYPE_READ_WRITE:
+                    // TODO: Implement READ/WRITE functionality for SPI
+                    break;
+
+                default:
+                    retVal = -1;
+                    break;
+            }
+
+            printf("%d byte(s) transmitted over %s.\n",
+                0,
                 IO->name);
         }
         catch (const std::system_error &e) {
-            printf("Failed to write: %s\n", e.what());
+            printf("Failed to %s: %s\n",
+                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : ""))),
+                e.what());
             retVal = -1;
         }
         catch (const std::invalid_argument &e) {
-            printf("Invalid xferument: %s\n", e.what());
+            printf("Invalid argument: %s\n", e.what());
             retVal = -1;
         }
-    } else if (xfer.xferType == XFER_READ) {
-        try {
-            printf("Starting a READ using %s on channel %d with a len of %d bytes at %dHz.\n",
-                IO->name,
-                xfer.channel,
-                xfer.len,
-                xfer.clk);
-            IO->read(&xfer);
-            printf("%d byte(s) read over %s.\n", xfer.bytesTranferred, IO->name);
-            printfArray(xfer.buff, xfer.bytesTranferred);
-        }
-        catch (const std::system_error &e) {
-            printf("Failed to read: %s\n", e.what());
-            retVal = -1;
-        }
-        catch (const std::invalid_argument &e) {
-            printf("Invalid xferument: %s\n", e.what());
-            retVal = -1;
-        }
-
-    } else {
-        printf("No transfer type given (-x).\n");
-        retVal = -1;
     }
 
     // Cleanup

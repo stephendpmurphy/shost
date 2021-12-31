@@ -21,11 +21,11 @@ typedef enum {
 } xfer_intf_t;
 
 typedef enum {
-    XFER_NONE = 0x00,
-    XFER_WRITE,
-    XFER_READ,
-    XFER_READ_WRITE,
-    XFER__MAX__
+    XFER_TYPE_NONE = 0x00,
+    XFER_TYPE_WRITE,
+    XFER_TYPE_READ,
+    XFER_TYPE_READ_WRITE,
+    XFER_TYPE__MAX__
 } xfer_type_t;
 
 typedef struct {

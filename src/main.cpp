@@ -2,13 +2,13 @@
 #include <argz.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xfer.h"
+#include "shost.h"
 #include "util.h"
 
 const char *argp_program_bug_address = "stephendpmurphy@msn.com";
 const char *argp_program_version = "version 1.0";
 
-volatile xfer_t xfer = {
+volatile shost_xfer_t xfer = {
     10000, // Clock
     0, // Channel
     0, // Length
@@ -65,7 +65,7 @@ static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) 
 }
 
 static int parse_opt (int key, char *arg, struct argp_state *state) {
-    xfer_t *xfer_ptr = (xfer_t *)state->input;
+    shost_xfer_t *xfer_ptr = (shost_xfer_t *)state->input;
 
     switch (key) {
         case 'i':
@@ -150,7 +150,22 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_state_help(state, stdout, ARGP_HELP_STD_HELP);
             }
             else {
-                xfer_begin(*xfer_ptr);
+                // If the interface is SPI, do the libMPSSE init
+                if( xfer_ptr->intf == XFER_INTF_SPI ) {
+                    // Check if the FTDI serial module is loaded. If so, remove it.
+                    // This requires sudo when running after a build. Not required when installed.
+                    if (util_isFtdiModuleLoaded() > 0) {
+                        util_removeFtdiModule();
+                    }
+
+                    /* init library */
+                    Init_libMPSSE();
+                }
+                shost_xfer_begin(*xfer_ptr);
+                // Cleanup
+                if( xfer_ptr->intf == XFER_INTF_SPI ) {
+                    Cleanup_libMPSSE();
+                }
             }
             break;
     }

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <system_error>
-#include "xfer.h"
+#include "shost.h"
 #include "libMPSSE_spi.h"
 #include "SPI.h"
 
@@ -10,7 +10,7 @@ SPI::SPI(): Protocol("SPI") {
 
 }
 
-void SPI::_write(xfer_t *xfer) {
+void SPI::_write(shost_xfer_t *xfer) {
     FT_STATUS status = FT_OK;
     ChannelConfig channelConf = {0};
     FT_DEVICE_LIST_INFO_NODE devList = {0};
@@ -51,7 +51,7 @@ void SPI::_write(xfer_t *xfer) {
     APP_CHECK_STATUS(status);
 }
 
-void SPI::_read(xfer_t *xfer) {
+void SPI::_read(shost_xfer_t *xfer) {
     FT_STATUS status = FT_OK;
     ChannelConfig channelConf = {0};
     FT_DEVICE_LIST_INFO_NODE devList = {0};

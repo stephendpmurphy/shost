@@ -3,17 +3,17 @@
 
 #include "libMPSSE_spi.h"
 #include "Protocol.h"
-#include "cli.h"
+#include "xfer.h"
 
-int spi_processCmd(arg_t* arg);
+int spi_processCmd(xfer_t* xfer);
 
 class SPI: public Protocol {
 public:
     SPI();
 
 private:
-    void _write(arg_t* arg);
-    void _read(arg_t* arg);
+    void _write(xfer_t* xfer);
+    void _read(xfer_t* xfer);
 };
 
 #endif // _SPI_H_

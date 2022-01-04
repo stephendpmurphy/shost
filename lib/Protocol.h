@@ -5,7 +5,7 @@
 #ifndef MPSSE_CLI_PROTOCOL_H
 #define MPSSE_CLI_PROTOCOL_H
 
-#include "cli.h"
+#include "xfer.h"
 
 class Protocol{
 public:
@@ -13,15 +13,15 @@ public:
 
     Protocol(const char* name);
 
-    void read(arg_t* arg);
-    void write(arg_t* arg);
-    void read_write(arg_t* arg);
+    void read(xfer_t* xfer);
+    void write(xfer_t* xfer);
+    void read_write(xfer_t* xfer);
 
 protected:
     struct mpsse_context* mpsse;
 private:
-    void virtual _write(arg_t* arg) = 0;
-    void virtual _read(arg_t* arg) = 0;
+    void virtual _write(xfer_t* xfer) = 0;
+    void virtual _read(xfer_t* xfer) = 0;
 };
 
 

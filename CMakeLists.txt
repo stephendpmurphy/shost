@@ -11,7 +11,8 @@ project(mpsse-cli)
 add_subdirectory(libMPSSE)
 
 # Set our include directories
-include_directories(inc
+include_directories(src
+                    lib
                     libMPSSE/inc
                     libMPSSE/inc/linux)
 
@@ -20,11 +21,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 
-set(APP_SRC ${PROJECT_SOURCE_DIR}/src/mpsse-cli.cpp
-        ${PROJECT_SOURCE_DIR}/src/SPI.cpp
-        ${PROJECT_SOURCE_DIR}/src/I2C.cpp
-        ${PROJECT_SOURCE_DIR}/src/cli.cpp
-        ${PROJECT_SOURCE_DIR}/src/Protocol.cpp)
+set(APP_SRC ${PROJECT_SOURCE_DIR}/src/main.cpp
+        ${PROJECT_SOURCE_DIR}/src/util.cpp
+        ${PROJECT_SOURCE_DIR}/lib/Protocol.cpp
+        ${PROJECT_SOURCE_DIR}/lib/SPI.cpp
+        ${PROJECT_SOURCE_DIR}/lib/I2C.cpp
+        ${PROJECT_SOURCE_DIR}/lib/xfer.cpp
+)
 
 # Create our executable
 add_executable(mpsse ${APP_SRC})
@@ -40,8 +43,8 @@ find_package(libmpsse)
 if ( (${LIBFTDI1_FOUND}) AND (${LIBMPSSE_FOUND}) )
     message(STATUS "Enabling FTDI and MPSSE support")
     set(ENABLE_FTDI 1)
-    target_link_libraries(mpsse-cli ${LIBFTDI1_LIBRARIES} ${LIBMPSSE_LIBRARIES})
-    target_include_directories(mpsse-cli PUBLIC ${LIBFTDI1_INCLUDE_DIRS} ${LIBMPSSE_INCLUDE_DIRS})
+    target_link_libraries(mpsse ${LIBFTDI1_LIBRARIES} ${LIBMPSSE_LIBRARIES})
+    target_include_directories(mpsse PUBLIC ${LIBFTDI1_INCLUDE_DIRS} ${LIBMPSSE_INCLUDE_DIRS})
 else()
     message(STATUS "Disabling FTDI code due to missing libftdi1 or libmpsse:")
     message(STATUS "  LIBFTDI1_FOUND = ${LIBFTDI1_FOUND}")

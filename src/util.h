@@ -1,18 +1,18 @@
-#ifndef _MPSSE_CLI_H_
-#define _MPSSE_CLI_H_
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
-#include "ftd2xx.h"
-#include "libMPSSE_spi.h"
-#include "cli.h"
+#include <stdint.h>
 
 #define APP_CHECK_STATUS(exp) {if(exp!=FT_OK){printf("%s:%d:%s(): status(0x%x) \
 != FT_OK\n",__FILE__, __LINE__, __FUNCTION__,exp);exit(1);}else{;}};
+
 #define CHECK_NULL(exp){if(exp==NULL){printf("%s:%d:%s():  NULL expression \
 encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
 
-int CB_printCliVersion(arg_t *arg);
-int CB_printFTDIdevices(arg_t *arg);
+void printfArray(uint8 *buff, uint16 len);
+int util_isFtdiModuleLoaded(void);
+int util_removeFtdiModule(void);
+uint32_t util_getMPSSEchannelCount(void);
+uint32_t util_printMPSSEchannelInfo(int channels);
 
-static void printfArray(uint8 *buff, uint16 len);
-
-#endif // _MPSSE_CLI_H_
+#endif // _UTIL_H_

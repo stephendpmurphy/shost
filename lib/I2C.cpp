@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <system_error>
 #include <cassert>
-#include "cli.h"
 
 uint8 I2C::i2c_write(uint8 address, uint8 reg, uint8 *data, size_t data_size) {
     size_t write_size = 2 + data_size; // address + reg + datasize
@@ -78,7 +77,7 @@ uint8 I2C::i2c_read(uint8 address, uint8 reg, uint8 *buffer, size_t buffer_size)
     return ret;
 }
 
-void I2C::_write(arg_t *arg) {
+void I2C::_write(xfer_t *xfer) {
 
     int ret = 0;
     // TODO make freq adjustable
@@ -91,7 +90,7 @@ void I2C::_write(arg_t *arg) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = i2c_write(arg->address, arg->_register, arg->buff, arg->len);
+    ret = i2c_write(xfer->address, xfer->_register, xfer->buff, xfer->len);
 
     Close(this->mpsse);
 
@@ -107,11 +106,11 @@ void I2C::_write(arg_t *arg) {
             // all is good, no need to do anything.
             break;
     }
-    arg->bytesTranferred = arg->len;
+    xfer->bytesTranferred = xfer->len;
 
 }
 
-void I2C::_read(arg_t *arg) {
+void I2C::_read(xfer_t *xfer) {
     int ret = 0;
     // TODO make freq adjustable
     printf("Frequency set to 100Khz.\n");
@@ -124,7 +123,7 @@ void I2C::_read(arg_t *arg) {
     }
 
 //    TODO function is (almost) 1:1 with _write, not so DRY!
-    ret = i2c_read(arg->address, arg->_register, arg->buff, arg->len);
+    ret = i2c_read(xfer->address, xfer->_register, xfer->buff, xfer->len);
 
     Close(this->mpsse);
 

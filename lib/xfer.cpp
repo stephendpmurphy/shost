@@ -50,7 +50,7 @@ int xfer_begin(xfer_t xfer) {
     }
     else {
         printf("Starting a %s using %s on channel %d with a len of %d bytes at %dHz.\n",
-                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : ""))),
+                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
                 IO->name,
                 xfer.channel,
                 xfer.len,
@@ -81,7 +81,7 @@ int xfer_begin(xfer_t xfer) {
         }
         catch (const std::system_error &e) {
             printf("Failed to %s: %s\n",
-                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : ""))),
+                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
                 e.what());
             retVal = -1;
         }

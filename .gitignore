@@ -13,3 +13,5 @@ _deps
 output/
 build/
 *settings*.json
+.idea
+cmake-build*

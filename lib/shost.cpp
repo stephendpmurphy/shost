@@ -5,29 +5,16 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <system_error>
-#include "xfer.h"
+#include "shost.h"
 #include "SPI.h"
 #include "I2C.h"
 #include "Protocol.h"
-#include "util.h"
 
-int xfer_begin(xfer_t xfer) {
+int shost_xfer_begin(shost_xfer_t xfer) {
     int retVal = 0;
     Protocol *IO;
 
     // Check if we have any available channels to begin with
-
-    // If the interface is SPI, do the libMPSSE init
-    if( xfer.intf = XFER_INTF_SPI ) {
-        // Check if the FTDI serial module is loaded. If so, remove it.
-        // This requires sudo when running after a build. Not required when installed.
-        if (util_isFtdiModuleLoaded() > 0) {
-            util_removeFtdiModule();
-        }
-
-        /* init library */
-        Init_libMPSSE();
-    }
 
     // Setup the interface class
     switch (xfer.intf) {
@@ -89,11 +76,6 @@ int xfer_begin(xfer_t xfer) {
             printf("Invalid argument: %s\n", e.what());
             retVal = -1;
         }
-    }
-
-    // Cleanup
-    if( xfer.intf = XFER_INTF_SPI ) {
-        Cleanup_libMPSSE();
     }
 
     // Return

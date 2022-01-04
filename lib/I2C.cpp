@@ -77,7 +77,7 @@ uint8 I2C::i2c_read(uint8 address, uint8 reg, uint8 *buffer, size_t buffer_size)
     return ret;
 }
 
-void I2C::_write(xfer_t *xfer) {
+void I2C::_write(shost_xfer_t *xfer) {
 
     int ret = 0;
     // TODO make freq adjustable
@@ -110,7 +110,7 @@ void I2C::_write(xfer_t *xfer) {
 
 }
 
-void I2C::_read(xfer_t *xfer) {
+void I2C::_read(shost_xfer_t *xfer) {
     int ret = 0;
     // TODO make freq adjustable
     printf("Frequency set to 100Khz.\n");

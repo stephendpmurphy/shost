@@ -18,7 +18,7 @@ typedef enum {
     XFER_INTF_SPI,
     XFER_INTF_I2C,
     XFER_INTF__MAX__
-} xfer_intf_t;
+} shost_xfer_intf_t;
 
 typedef enum {
     XFER_TYPE_NONE = 0x00,
@@ -26,7 +26,7 @@ typedef enum {
     XFER_TYPE_READ,
     XFER_TYPE_READ_WRITE,
     XFER_TYPE__MAX__
-} xfer_type_t;
+} shost_xfer_type_t;
 
 typedef struct {
     int clk;
@@ -35,11 +35,11 @@ typedef struct {
     int bytesTranferred;
     int address;
     int _register;
-    xfer_intf_t intf;
-    xfer_type_t xferType;
+    shost_xfer_intf_t intf;
+    shost_xfer_type_t xferType;
     uint8_t buff[MAX_BUFF_SIZE];
-} xfer_t;
+} shost_xfer_t;
 
-int xfer_begin(xfer_t xfer);
+int shost_xfer_begin(shost_xfer_t xfer);
 
 #endif // _XFER_H_

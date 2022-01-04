@@ -7,7 +7,7 @@
 #include <cassert>
 #include "Protocol.h"
 
-void Protocol::read(xfer_t* xfer) {
+void Protocol::read(shost_xfer_t* xfer) {
     assert(!(xfer->len < 1) && "Length must be greater than 0 when executing a \"read\" transfer.");
     assert(xfer->clk > 0 && "Clock should be atleast 1Hz!");
     assert(xfer->channel >= 0 && "Define a channel!");
@@ -16,7 +16,7 @@ void Protocol::read(xfer_t* xfer) {
     _read(xfer);
 }
 
-void Protocol::write(xfer_t* xfer) {
+void Protocol::write(shost_xfer_t* xfer) {
 
     assert(!(xfer->len < 1) && "Length must be greater than 0 when executing a \"write\" transfer.");
     assert(xfer->clk > 0 && "Clock should be atleast 1Hz!");
@@ -26,7 +26,7 @@ void Protocol::write(xfer_t* xfer) {
     _write(xfer);
 }
 
-void Protocol::read_write(xfer_t* xfer) {
+void Protocol::read_write(shost_xfer_t* xfer) {
 // TODO
 }
 

@@ -16,10 +16,8 @@ jobs:
       run:  |
         sudo apt-get update
         sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev autoconf automake libtool
-        sudo git clone git://developer.intra2net.com/libftdi ~/libftdi1 && cd ~/libftdi1 && mkdir -p build \
-          && cd build && cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../ && make -j8 && make install
-        sudo git clone https://github.com/l29ah/libmpsse.git ~/libmpsse && cd ~/libmpsse/src \
-          && autoreconf --install && ./configure && make -j8 && make install
+        cd vendor/libftdi1 && mkdir -p build && cd build && cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../ && make -j8 && make install
+        cd vendor/libmpsse/src && autoreconf --install && ./configure && make -j8 && make install
 
     - name: Compile
       run: mkdir -p build && cd build && cmake .. && make -j8

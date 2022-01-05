@@ -20,12 +20,17 @@ jobs:
     - name: Build & Install libftdi1
       run: |
         cd vendor/libftdi && mkdir -p build && cd build
-        sudo cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../ && make -j8 && make install
+        cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../
+        make -j8
+        sudo make install
 
     - name: Build & Install libmpsse
       run: |
         cd vendor/libmpsse/src
-        sudo autoreconf --install && ./configure && make -j8 && make install
+        sudo autoreconf --install
+        ./configure
+        make -j8
+        sudo make install
 
     - name: Compile
       run: mkdir -p build && cd build && cmake .. && make -j8

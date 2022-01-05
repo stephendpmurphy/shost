@@ -23,6 +23,7 @@ jobs:
         sudo cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../ && make -j8 && make install
 
     - name: Build & Install libmpsse
+      run: |
         cd vendor/libmpsse/src
         sudo autoreconf --install && ./configure && make -j8 && make install
 

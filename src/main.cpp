@@ -4,9 +4,9 @@
 #include <string.h>
 #include "shost.h"
 #include "util.h"
+#include "version.h"
 
-const char *argp_program_bug_address = "stephendpmurphy@msn.com";
-const char *argp_program_version = "version 1.0";
+const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
 
 volatile shost_xfer_t xfer = {
     10000, // Clock
@@ -172,7 +172,14 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
     return 0;
 }
 
+static void print_version(FILE *stream, struct argp_state *state) {
+    fprintf(stream, "shost v%d.%d.%d\n", SHOST_VERSION_MAJOR, SHOST_VERSION_MINOR, SHOST_VERSION_PATCH);
+    fprintf(stream, "MIT License - Copyright (c) 2022 Stephen Murphy\n");
+    fprintf(stream, "written by @stephendpmurphy\n");
+}
+
 int main(int argc, char *argv[] ) {
+    // Generate a list of our available CLI options
     struct argp_option cli_options[] = {
         {0,0,0,0, "General serial options:", 1},
         {"interface", 'i', "SPI || I2C", 0, "Serial interface selection"},
@@ -190,7 +197,12 @@ int main(int argc, char *argv[] ) {
         {0}
     };
 
+    // Creat our argp struct
     struct argp argp = { cli_options, parse_opt };
 
+    // Store our program version hook function
+    argp_program_version_hook = print_version;
+
+    // Begin parsing options
     return argp_parse (&argp, argc, argv, 0, 0, (void *__restrict__)&xfer);
 }

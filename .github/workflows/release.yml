@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run:  |
+
+    - name: Compile
+      run: mkdir -p build && cd build && cmake .. && make -j8
+
+    - name: Extract version
+      run: |
+        echo "VERSION_MAJOR=$(cat lib/version.h | grep VERSION_MAJOR | awk '{print $3}')" >> $GITHUB_ENV
+        echo "VERSION_MINOR=$(cat lib/version.h | grep VERSION_MINOR | awk '{print $3}')" >> $GITHUB_ENV
+        echo "VERSION_PATCH=$(cat lib/version.h | grep VERSION_PATCH | awk '{print $3}')" >> $GITHUB_ENV
+
+    - uses: ncipollo/release-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{env.VERSION_MAJOR}}.${{env.VERSION_MINOR}}.${{env.VERSION_PATCH}}

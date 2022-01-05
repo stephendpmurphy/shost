@@ -15,7 +15,7 @@ jobs:
     - name: Install Dependencies
       run:  |
         sudo apt-get update
-        sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev autoconf automake libtool
+        sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev autoconf automake libtool libftdi-dev
 
     - name: Build & Install libftdi1
       run: |

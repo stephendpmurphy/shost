@@ -78,10 +78,10 @@ void I2C::_read(shost_xfer_t *xfer) {
 
 }
 
-uint8 I2C::i2c_write(uint8 address, uint8 reg, uint8 *data, size_t data_size) {
+uint8_t I2C::i2c_write(uint8_t address, uint8_t reg, uint8_t *data, size_t data_size) {
     size_t write_size = 2 + data_size; // address + reg + datasize
     char *writebuffer = (char *) malloc(write_size);
-    uint8 ret = 0;
+    uint8_t ret = 0;
     writebuffer[0] = ((address << 1) | 0b00000000);
     writebuffer[1] = reg;
     for (int i = 0; i < data_size; ++i) {
@@ -110,12 +110,12 @@ uint8 I2C::i2c_write(uint8 address, uint8 reg, uint8 *data, size_t data_size) {
  * @param buffer_size read size
  * @return 0 if success, 1 if no response and 2 if hardware failed.
  */
-uint8 I2C::i2c_read(uint8 address, uint8 reg, uint8 *buffer, size_t buffer_size) {
+uint8_t I2C::i2c_read(uint8_t address, uint8_t reg, uint8_t *buffer, size_t buffer_size) {
 
-    uint8 ret = 2;
+    uint8_t ret = 2;
     const static size_t write_size = 2; // address + reg
     char write_buffer[write_size];
-    uint8 *read_buffer = (uint8 *) malloc(buffer_size);
+    uint8_t *read_buffer = (uint8_t *) malloc(buffer_size);
     write_buffer[0] = ((address << 1) | 0b00000000); // write mode
     write_buffer[1] = reg;
     if (Start(mpsse) == MPSSE_OK) {
@@ -125,7 +125,7 @@ uint8 I2C::i2c_read(uint8 address, uint8 reg, uint8 *buffer, size_t buffer_size)
                     char w = ((address << 1) | 0b00000001); // read mode
                     if (Write(mpsse, &w, 1) == MPSSE_OK) {
                         if (GetAck(mpsse) == ACK) {
-                            read_buffer = (uint8 *)Read(mpsse, buffer_size);
+                            read_buffer = (uint8_t *)Read(mpsse, buffer_size);
                             memcpy(buffer, read_buffer, buffer_size);
                             SendNacks(mpsse);
                             ret = 0;

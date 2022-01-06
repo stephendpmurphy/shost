@@ -1,18 +1,27 @@
 #include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <system_error>
-#include "shost.h"
 #include <mpsse.h>
-// #include "libMPSSE_spi.h"
+#include "shost.h"
 #include "SPI.h"
+
+#define MAX_SPI_CLK_RATE 6000000
 
 SPI::SPI(): Protocol("SPI") {
 
 }
 
 void SPI::_write(shost_xfer_t *xfer) {
-    int ret = 0;
+    shost_ret_t ret = SHOST_RET_OK;
+
+    // TODO: Under investigation. Clock rates can't exceed 6Mhz
+    if( xfer->clk > MAX_SPI_CLK_RATE) {
+        xfer->clk = MAX_SPI_CLK_RATE;
+        std::clog << "SPI Clock rate can not exceed " << MAX_SPI_CLK_RATE << "Hz. Reducing clock rate.\n";
+    }
+
     // Open an MPSSE instance for SPI0 and store the context
     this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
 
@@ -27,22 +36,28 @@ void SPI::_write(shost_xfer_t *xfer) {
     Close(this->mpsse);
 
     switch (ret) {
-        case 1:
+        case SHOST_RET_LIB_ERR:
             // TODO printing address whould be nice
             throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
             break;
-        case 2:
+        case SHOST_RET_HW_ERR:
             throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
             break;
         default:
             // all is good, no need to do anything.
             break;
     }
-    xfer->bytesTranferred = xfer->len;
 }
 
 void SPI::_read(shost_xfer_t *xfer) {
-    int ret = 0;
+    shost_ret_t ret = SHOST_RET_OK;
+
+    // TODO: Under investigation. Clock rates can't exceed 6Mhz
+    if( xfer->clk > MAX_SPI_CLK_RATE) {
+        xfer->clk = MAX_SPI_CLK_RATE;
+        std::clog << "SPI Clock rate can not exceed " << MAX_SPI_CLK_RATE << "Hz. Reducing clock rate.\n";
+    }
+
     // Open an MPSSE instance for SPI0 and store the context
     this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
 
@@ -57,11 +72,11 @@ void SPI::_read(shost_xfer_t *xfer) {
     Close(this->mpsse);
 
     switch (ret) {
-        case 1:
+        case SHOST_RET_LIB_ERR:
             // TODO printing address whould be nice
             throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
             break;
-        case 2:
+        case SHOST_RET_HW_ERR:
             throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
             break;
         default:

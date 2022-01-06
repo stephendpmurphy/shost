@@ -7,17 +7,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include "libMPSSE_spi.h"
 #include "util.h"
-
-void printfArray(uint8 *buff, uint16 len) {
-    printf("Array dump: ");
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X ", buff[i]);
-    }
-
-    printf("\n");
-}
 
 int util_isFtdiModuleLoaded(void) {
     FILE *fp;

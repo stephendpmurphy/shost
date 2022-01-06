@@ -20,7 +20,15 @@ volatile shost_xfer_t xfer = {
     {0x00}
 };
 
-static int8 parseCommaDelimetedData(char *arg, uint8 *destBuff, int *buffIndex) {
+
+static void dump_array(uint8_t *arr, int len) {
+    for(int i = 0; i < len; i++) {
+        printf("%02X ", arr[i]);
+    }
+    printf("\n");
+}
+
+static int8_t parseCommaDelimetedData(char *arg, uint8_t *destBuff, int *buffIndex) {
     int listLength = 0;
     int lastCommaIndex = 0;
     char hexCharacter[5] = {0x00};
@@ -150,6 +158,11 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             }
             else {
                 shost_xfer_begin(*xfer_ptr);
+                // Print the TX and RX buffers
+                printf("TX: ");
+                dump_array(xfer_ptr->tx_buff, xfer_ptr->len);
+                printf("RX: ");
+                dump_array(xfer_ptr->rx_buff, xfer_ptr->len);
             }
             break;
     }
@@ -167,7 +180,7 @@ int main(int argc, char *argv[] ) {
     struct argp_option cli_options[] = {
         {0,0,0,0, "General serial options:", 1},
         {"interface", 'i', "SPI || I2C", 0, "Serial interface selection"},
-        {"xfer", 'x', "r || w || rw", 0, "Serial transfer type - Read, Write or Read & Write"},
+        {"xfer", 'x', "r || w || ", 0, "Serial transfer type - Read or Write (SPI Read/Writes can be initated using a Write transfer)"},
         {"channel", 'c', "NUM", 0, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
         {"frequency", 'f', "NUM", 0, "Serial communication freqeuncy"},
         {"data", 'd', "ARRAY", 0, "Comma delimted data to be written in hex."},

@@ -10,9 +10,6 @@ project(shost)
 set(LIB_NAME shost)
 set(EXE_NAME shost-cli)
 
-# Include the libMPSSE sub-directory
-add_subdirectory(libMPSSE)
-
 # Set our include directories
 include_directories(src
                     lib
@@ -59,7 +56,7 @@ endif()
 
 
 # Link against the MPSSE, dl and ftd2xx libs
-target_link_libraries(${EXE_NAME} MPSSE dl ${LIB_NAME})
+target_link_libraries(${EXE_NAME} dl ${LIB_NAME})
 
 set_target_properties(${EXE_NAME} PROPERTIES OUTPUT_NAME ${LIB_NAME})
 

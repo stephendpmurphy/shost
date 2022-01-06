@@ -1,7 +1,6 @@
 #ifndef _SPI_H_
 #define _SPI_H_
 
-#include "libMPSSE_spi.h"
 #include "Protocol.h"
 #include "shost.h"
 

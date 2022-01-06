@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/output/mpsse-cli",
-            "args": [],
+            "args": ["-i", "spi", "-x", "r", "-d", "0x01,0xA"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

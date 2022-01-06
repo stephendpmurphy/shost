@@ -157,12 +157,13 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_state_help(state, stdout, ARGP_HELP_STD_HELP);
             }
             else {
-                shost_xfer_begin(*xfer_ptr);
-                // Print the TX and RX buffers
-                printf("TX: ");
-                dump_array(xfer_ptr->tx_buff, xfer_ptr->len);
-                printf("RX: ");
-                dump_array(xfer_ptr->rx_buff, xfer_ptr->len);
+                if( 0 == shost_xfer_begin(*xfer_ptr) ) {
+                    // Print the TX and RX buffers
+                    printf("TX: ");
+                    dump_array(xfer_ptr->tx_buff, xfer_ptr->len);
+                    printf("RX: ");
+                    dump_array(xfer_ptr->rx_buff, xfer_ptr->len);
+                }
             }
             break;
     }

@@ -127,8 +127,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
 
         case 'd':
             // Parse the comma delimeted string into a data array
-            parseCommaDelimetedData(arg, xfer_ptr->buff, &xfer_ptr->len);
-            printfArray(xfer_ptr->buff, xfer_ptr->len);
+            parseCommaDelimetedData(arg, xfer_ptr->tx_buff, &xfer_ptr->len);
             break;
 
         case 'l':
@@ -150,22 +149,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_state_help(state, stdout, ARGP_HELP_STD_HELP);
             }
             else {
-                // If the interface is SPI, do the libMPSSE init
-                // if( xfer_ptr->intf == XFER_INTF_SPI ) {
-                //     // Check if the FTDI serial module is loaded. If so, remove it.
-                //     // This requires sudo when running after a build. Not required when installed.
-                //     if (util_isFtdiModuleLoaded() > 0) {
-                //         util_removeFtdiModule();
-                //     }
-
-                //     /* init library */
-                //     Init_libMPSSE();
-                // }
                 shost_xfer_begin(*xfer_ptr);
-                // Cleanup
-                // if( xfer_ptr->intf == XFER_INTF_SPI ) {
-                //     Cleanup_libMPSSE();
-                // }
             }
             break;
     }

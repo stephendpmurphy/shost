@@ -22,7 +22,7 @@ void SPI::_write(shost_xfer_t *xfer) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = spi_write(xfer->buff, xfer->len);
+    ret = spi_write(xfer->tx_buff, xfer->rx_buff, xfer->len);
 
     Close(this->mpsse);
 
@@ -52,7 +52,7 @@ void SPI::_read(shost_xfer_t *xfer) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = spi_read(xfer->buff, xfer->len);
+    ret = spi_read(xfer->rx_buff, xfer->len);
 
     Close(this->mpsse);
 
@@ -72,32 +72,40 @@ void SPI::_read(shost_xfer_t *xfer) {
 
 }
 
-int8_t SPI::spi_write(uint8_t *src_buffer, size_t buffer_len) {
-    char *writeBuffer = (char *) malloc(buffer_len);
-    memcpy((void*)writeBuffer, (const void*)src_buffer, buffer_len);
-    // Send the start condition for SPI
-    Start(mpsse);
-    // Write our buffer
-    Write(mpsse, writeBuffer, buffer_len);
-    // Send the stop condition for SPI
-    Stop(mpsse);
+shost_ret_t SPI::spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buffer_len) {
+    shost_ret_t retVal = SHOST_RET_OK;
 
-    return 0;
+    // Send the start condition for SPI
+    retVal = (shost_ret_t)Start(mpsse);
+
+    if( SHOST_RET_OK == retVal ) {
+        // Write our buffer and store the data read back
+        retVal = (shost_ret_t)FastTransfer(mpsse, (char*)src_buffer, (char*)dest_buffer, buffer_len);
+    }
+
+    if( SHOST_RET_OK == retVal ) {
+        // Send the stop condition for SPI
+        retVal = (shost_ret_t)Stop(mpsse);
+    }
+
+    return retVal;
 }
 
-int8_t SPI::spi_read(uint8_t *dest_buffer, size_t buffer_len) {
-    // Create a read buffer to store the read result in
-    char *readBuffer = (char *) malloc(buffer_len+1);
-    // Send the start condition for SPI
-    Start(mpsse);
-    // Write our buffer
-    readBuffer = Read(mpsse, buffer_len);
-    // Send the stop condition for SPI
-    Stop(mpsse);
-    // Copy over the resulting data before it's destroyed
-    memcpy((void *)dest_buffer, (const void*)readBuffer, buffer_len);
-    // Free the read buffer we created
-    free(readBuffer);
+shost_ret_t SPI::spi_read(uint8_t *dest_buffer, size_t buffer_len) {
+    shost_ret_t retVal = SHOST_RET_OK;
 
-    return 0;
+    // Send the start condition for SPI
+    retVal = (shost_ret_t)Start(mpsse);
+
+    if( SHOST_RET_OK == retVal ) {
+        // Write our buffer
+        retVal = (shost_ret_t)FastRead(mpsse, (char*)dest_buffer, buffer_len);
+    }
+
+    if( SHOST_RET_OK == retVal ) {
+        // Send the stop condition for SPI
+        retVal = (shost_ret_t)Stop(mpsse);
+    }
+
+    return retVal;
 }

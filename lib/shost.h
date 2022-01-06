@@ -14,6 +14,13 @@
 encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
 
 typedef enum {
+    SHOST_RET_OK = 0x00,
+    SHOST_RET_LIB_ERR,
+    SHOST_RET_NAK,
+    SHOST_RET__MAX__
+} shost_ret_t;
+
+typedef enum {
     XFER_INTF_NONE = 0x00,
     XFER_INTF_SPI,
     XFER_INTF_I2C,
@@ -37,7 +44,8 @@ typedef struct {
     int _register;
     shost_xfer_intf_t intf;
     shost_xfer_type_t xferType;
-    uint8_t buff[MAX_BUFF_SIZE];
+    uint8_t tx_buff[MAX_BUFF_SIZE];
+    uint8_t rx_buff[MAX_BUFF_SIZE];
 } shost_xfer_t;
 
 int shost_xfer_begin(shost_xfer_t xfer);

@@ -15,8 +15,8 @@ private:
     void _write(shost_xfer_t* xfer);
     void _read(shost_xfer_t* xfer);
 
-    int8_t spi_write(uint8_t *src_buffer, size_t buffer_len);
-    int8_t spi_read(uint8_t *dest_buffer, size_t buffer_len);
+    shost_ret_t spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buffer_len);
+    shost_ret_t spi_read(uint8_t *dest_buffer, size_t buffer_len);
 };
 
 #endif // _SPI_H_

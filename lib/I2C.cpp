@@ -27,7 +27,7 @@ void I2C::_write(shost_xfer_t *xfer) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = i2c_write(xfer->address, xfer->_register, xfer->buff, xfer->len);
+    ret = i2c_write(xfer->address, xfer->_register, xfer->tx_buff, xfer->len);
 
     Close(this->mpsse);
 
@@ -59,7 +59,7 @@ void I2C::_read(shost_xfer_t *xfer) {
     }
 
 //    TODO function is (almost) 1:1 with _write, not so DRY!
-    ret = i2c_read(xfer->address, xfer->_register, xfer->buff, xfer->len);
+    ret = i2c_read(xfer->address, xfer->_register, xfer->rx_buff, xfer->len);
 
     Close(this->mpsse);
 

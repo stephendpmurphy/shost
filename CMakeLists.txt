@@ -59,7 +59,7 @@ endif()
 
 
 # Link against the MPSSE, dl and ftd2xx libs
-target_link_libraries(${EXE_NAME} MPSSE dl ftd2xx ${LIB_NAME})
+target_link_libraries(${EXE_NAME} MPSSE dl ${LIB_NAME})
 
 set_target_properties(${EXE_NAME} PROPERTIES OUTPUT_NAME ${LIB_NAME})
 

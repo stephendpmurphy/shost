@@ -17,7 +17,6 @@ void Protocol::read(shost_xfer_t* xfer) {
 }
 
 void Protocol::write(shost_xfer_t* xfer) {
-
     assert(!(xfer->len < 1) && "Length must be greater than 0 when executing a \"write\" transfer.");
     assert(xfer->clk > 0 && "Clock should be atleast 1Hz!");
     assert(xfer->channel >= 0 && "Define a channel!");

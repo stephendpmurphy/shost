@@ -141,7 +141,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             break;
 
         case 777:
-            util_printMPSSEchannelInfo( util_getMPSSEchannelCount() );
+            // util_printMPSSEchannelInfo( util_getMPSSEchannelCount() );
             // Return 1 so we stop parsing arguments after printing available channels
             return 1;
 
@@ -151,21 +151,21 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             }
             else {
                 // If the interface is SPI, do the libMPSSE init
-                if( xfer_ptr->intf == XFER_INTF_SPI ) {
-                    // Check if the FTDI serial module is loaded. If so, remove it.
-                    // This requires sudo when running after a build. Not required when installed.
-                    if (util_isFtdiModuleLoaded() > 0) {
-                        util_removeFtdiModule();
-                    }
+                // if( xfer_ptr->intf == XFER_INTF_SPI ) {
+                //     // Check if the FTDI serial module is loaded. If so, remove it.
+                //     // This requires sudo when running after a build. Not required when installed.
+                //     if (util_isFtdiModuleLoaded() > 0) {
+                //         util_removeFtdiModule();
+                //     }
 
-                    /* init library */
-                    Init_libMPSSE();
-                }
+                //     /* init library */
+                //     Init_libMPSSE();
+                // }
                 shost_xfer_begin(*xfer_ptr);
                 // Cleanup
-                if( xfer_ptr->intf == XFER_INTF_SPI ) {
-                    Cleanup_libMPSSE();
-                }
+                // if( xfer_ptr->intf == XFER_INTF_SPI ) {
+                //     Cleanup_libMPSSE();
+                // }
             }
             break;
     }

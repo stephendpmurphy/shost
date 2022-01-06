@@ -10,6 +10,74 @@
 #include <system_error>
 #include <cassert>
 
+I2C::I2C(): Protocol("I²C") {
+
+}
+
+void I2C::_write(shost_xfer_t *xfer) {
+
+    int ret = 0;
+    // TODO make freq adjustable
+    printf("Frequency set to 100Khz.\n");
+    //    open mpsse device
+    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
+
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
+    }
+
+    ret = i2c_write(xfer->address, xfer->_register, xfer->buff, xfer->len);
+
+    Close(this->mpsse);
+
+    switch (ret) {
+        case 1:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from slave.");
+            break;
+        case 2:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
+    }
+    xfer->bytesTranferred = xfer->len;
+}
+
+void I2C::_read(shost_xfer_t *xfer) {
+    int ret = 0;
+    // TODO make freq adjustable
+    printf("Frequency set to 100Khz.\n");
+    //    open mpsse device
+    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
+
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
+    }
+
+//    TODO function is (almost) 1:1 with _write, not so DRY!
+    ret = i2c_read(xfer->address, xfer->_register, xfer->buff, xfer->len);
+
+    Close(this->mpsse);
+
+    switch (ret) {
+        case 1:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from slave.");
+            break;
+        case 2:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
+    }
+
+}
+
 uint8 I2C::i2c_write(uint8 address, uint8 reg, uint8 *data, size_t data_size) {
     size_t write_size = 2 + data_size; // address + reg + datasize
     char *writebuffer = (char *) malloc(write_size);
@@ -75,73 +143,4 @@ uint8 I2C::i2c_read(uint8 address, uint8 reg, uint8 *buffer, size_t buffer_size)
         ret = 2;
     free(read_buffer);
     return ret;
-}
-
-void I2C::_write(shost_xfer_t *xfer) {
-
-    int ret = 0;
-    // TODO make freq adjustable
-    printf("Frequency set to 100Khz.\n");
-    //    open mpsse device
-    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
-
-    if (this->mpsse != NULL && !this->mpsse->open) {
-        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
-        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
-    }
-
-    ret = i2c_write(xfer->address, xfer->_register, xfer->buff, xfer->len);
-
-    Close(this->mpsse);
-
-    switch (ret) {
-        case 1:
-            // TODO printing address whould be nice
-            throw std::system_error(ENXIO, std::generic_category(), "No response from slave.");
-            break;
-        case 2:
-            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
-            break;
-        default:
-            // all is good, no need to do anything.
-            break;
-    }
-    xfer->bytesTranferred = xfer->len;
-
-}
-
-void I2C::_read(shost_xfer_t *xfer) {
-    int ret = 0;
-    // TODO make freq adjustable
-    printf("Frequency set to 100Khz.\n");
-    //    open mpsse device
-    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
-
-    if (this->mpsse != NULL && !this->mpsse->open) {
-        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
-        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
-    }
-
-//    TODO function is (almost) 1:1 with _write, not so DRY!
-    ret = i2c_read(xfer->address, xfer->_register, xfer->buff, xfer->len);
-
-    Close(this->mpsse);
-
-    switch (ret) {
-        case 1:
-            // TODO printing address whould be nice
-            throw std::system_error(ENXIO, std::generic_category(), "No response from slave.");
-            break;
-        case 2:
-            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
-            break;
-        default:
-            // all is good, no need to do anything.
-            break;
-    }
-
-}
-
-I2C::I2C(): Protocol("I²C") {
-
 }

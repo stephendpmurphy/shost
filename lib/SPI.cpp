@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <system_error>
 #include "shost.h"
-#include "libMPSSE_spi.h"
+#include <mpsse.h>
+// #include "libMPSSE_spi.h"
 #include "SPI.h"
 
 SPI::SPI(): Protocol("SPI") {
@@ -11,85 +12,92 @@ SPI::SPI(): Protocol("SPI") {
 }
 
 void SPI::_write(shost_xfer_t *xfer) {
-    FT_STATUS status = FT_OK;
-    ChannelConfig channelConf = {0};
-    FT_DEVICE_LIST_INFO_NODE devList = {0};
-    uint32 channels = 0;
+    int ret = 0;
+    // Open an MPSSE instance for SPI0 and store the context
+    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
 
-    channelConf.ClockRate = xfer->clk;
-    channelConf.LatencyTimer = 255;
-    channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
-    channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
-
-    // Make sure we even have enough channels
-    status = SPI_GetNumChannels(&channels);
-
-    if( channels <= 0 ) {
-        throw std::system_error(ENODEV, std::generic_category(), "No MPSSE channels available.");
+    // Ensure the context is not NULL and and the mpsse channel is open
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
-    else if( xfer->channel > (channels - 1) ) {
-        // TODO this string mess in untested and not so pretty.
-        std::string err = "Invalid channel. Only";
-        err += std::to_string(channels);
-        err += " channel(s) available.";
-        throw std::system_error(ENODEV, std::generic_category(), err);
+
+    ret = spi_write(xfer->buff, xfer->len);
+
+    Close(this->mpsse);
+
+    switch (ret) {
+        case 1:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
+            break;
+        case 2:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
     }
-    status = SPI_GetChannelInfo(xfer->channel, &devList);
-    APP_CHECK_STATUS(status);
-
-    status = SPI_OpenChannel(xfer->channel, &devList.ftHandle);
-    APP_CHECK_STATUS(status);
-
-    status = SPI_InitChannel(devList.ftHandle, &channelConf);
-    APP_CHECK_STATUS(status);
-
-    status = SPI_Write(devList.ftHandle, (uint8 *)&xfer->buff, xfer->len,
-                       reinterpret_cast<uint32 *>(&xfer->bytesTranferred),
-                       SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES |
-                       SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE |
-                       SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE );
-    APP_CHECK_STATUS(status);
+    xfer->bytesTranferred = xfer->len;
 }
 
 void SPI::_read(shost_xfer_t *xfer) {
-    FT_STATUS status = FT_OK;
-    ChannelConfig channelConf = {0};
-    FT_DEVICE_LIST_INFO_NODE devList = {0};
-    uint32 channels = 0;
+    int ret = 0;
+    // Open an MPSSE instance for SPI0 and store the context
+    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
 
-    channelConf.ClockRate = xfer->clk;
-    channelConf.LatencyTimer = 255;
-    channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
-    channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
-
-    // Make sure we even have enough channels
-    status = SPI_GetNumChannels(&channels);
-
-    if( channels <= 0 ) {
-        throw std::system_error(ENODEV, std::generic_category(), "No MPSSE channels available.");
-    }
-    else if( xfer->channel > (channels - 1) ) {
-        // TODO this string mess in untested and not so pretty.
-        std::string err = "Invalid channel. Only";
-        err += std::to_string(channels);
-        err += " channel(s) available.";
-        throw std::system_error(ENODEV, std::generic_category(), err);
+    // Ensure the context is not NULL and and the mpsse channel is open
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    status = SPI_GetChannelInfo(xfer->channel, &devList);
-    APP_CHECK_STATUS(status);
+    ret = spi_read(xfer->buff, xfer->len);
 
-    status = SPI_OpenChannel(xfer->channel, &devList.ftHandle);
-    APP_CHECK_STATUS(status);
+    Close(this->mpsse);
 
-    status = SPI_InitChannel(devList.ftHandle, &channelConf);
-    APP_CHECK_STATUS(status);
+    switch (ret) {
+        case 1:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
+            break;
+        case 2:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
+    }
+    xfer->bytesTranferred = xfer->len;
 
-    status = SPI_Read(devList.ftHandle, (uint8 *)&xfer->buff, xfer->len,
-                      reinterpret_cast<uint32 *>(&xfer->bytesTranferred),
-                      SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES |
-                      SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE |
-                      SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE );
-    APP_CHECK_STATUS(status);
+}
 
+int8_t SPI::spi_write(uint8_t *src_buffer, size_t buffer_len) {
+    char *writeBuffer = (char *) malloc(buffer_len);
+    memcpy((void*)writeBuffer, (const void*)src_buffer, buffer_len);
+    // Send the start condition for SPI
+    Start(mpsse);
+    // Write our buffer
+    Write(mpsse, writeBuffer, buffer_len);
+    // Send the stop condition for SPI
+    Stop(mpsse);
+
+    return 0;
+}
+
+int8_t SPI::spi_read(uint8_t *dest_buffer, size_t buffer_len) {
+    // Create a read buffer to store the read result in
+    char *readBuffer = (char *) malloc(buffer_len+1);
+    // Send the start condition for SPI
+    Start(mpsse);
+    // Write our buffer
+    readBuffer = Read(mpsse, buffer_len);
+    // Send the stop condition for SPI
+    Stop(mpsse);
+    // Copy over the resulting data before it's destroyed
+    memcpy((void *)dest_buffer, (const void*)readBuffer, buffer_len);
+    // Free the read buffer we created
+    free(readBuffer);
+
+    return 0;
 }

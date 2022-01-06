@@ -1,95 +1,126 @@
 #include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <system_error>
+#include <mpsse.h>
 #include "shost.h"
-#include "libMPSSE_spi.h"
 #include "SPI.h"
+
+#define MAX_SPI_CLK_RATE 6000000
 
 SPI::SPI(): Protocol("SPI") {
 
 }
 
 void SPI::_write(shost_xfer_t *xfer) {
-    FT_STATUS status = FT_OK;
-    ChannelConfig channelConf = {0};
-    FT_DEVICE_LIST_INFO_NODE devList = {0};
-    uint32 channels = 0;
+    shost_ret_t ret = SHOST_RET_OK;
 
-    channelConf.ClockRate = xfer->clk;
-    channelConf.LatencyTimer = 255;
-    channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
-    channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
-
-    // Make sure we even have enough channels
-    status = SPI_GetNumChannels(&channels);
-
-    if( channels <= 0 ) {
-        throw std::system_error(ENODEV, std::generic_category(), "No MPSSE channels available.");
+    // TODO: Under investigation. Clock rates can't exceed 6Mhz
+    if( xfer->clk > MAX_SPI_CLK_RATE) {
+        xfer->clk = MAX_SPI_CLK_RATE;
+        std::clog << "SPI Clock rate can not exceed " << MAX_SPI_CLK_RATE << "Hz. Reducing clock rate.\n";
     }
-    else if( xfer->channel > (channels - 1) ) {
-        // TODO this string mess in untested and not so pretty.
-        std::string err = "Invalid channel. Only";
-        err += std::to_string(channels);
-        err += " channel(s) available.";
-        throw std::system_error(ENODEV, std::generic_category(), err);
+
+    // Open an MPSSE instance for SPI0 and store the context
+    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
+
+    // Ensure the context is not NULL and and the mpsse channel is open
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
-    status = SPI_GetChannelInfo(xfer->channel, &devList);
-    APP_CHECK_STATUS(status);
 
-    status = SPI_OpenChannel(xfer->channel, &devList.ftHandle);
-    APP_CHECK_STATUS(status);
+    ret = spi_write(xfer->tx_buff, xfer->rx_buff, xfer->len);
 
-    status = SPI_InitChannel(devList.ftHandle, &channelConf);
-    APP_CHECK_STATUS(status);
+    Close(this->mpsse);
 
-    status = SPI_Write(devList.ftHandle, (uint8 *)&xfer->buff, xfer->len,
-                       reinterpret_cast<uint32 *>(&xfer->bytesTranferred),
-                       SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES |
-                       SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE |
-                       SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE );
-    APP_CHECK_STATUS(status);
+    switch (ret) {
+        case SHOST_RET_LIB_ERR:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
+            break;
+        case SHOST_RET_HW_ERR:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
+    }
 }
 
 void SPI::_read(shost_xfer_t *xfer) {
-    FT_STATUS status = FT_OK;
-    ChannelConfig channelConf = {0};
-    FT_DEVICE_LIST_INFO_NODE devList = {0};
-    uint32 channels = 0;
+    shost_ret_t ret = SHOST_RET_OK;
 
-    channelConf.ClockRate = xfer->clk;
-    channelConf.LatencyTimer = 255;
-    channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
-    channelConf.Pin = 0x00000000;/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
-
-    // Make sure we even have enough channels
-    status = SPI_GetNumChannels(&channels);
-
-    if( channels <= 0 ) {
-        throw std::system_error(ENODEV, std::generic_category(), "No MPSSE channels available.");
-    }
-    else if( xfer->channel > (channels - 1) ) {
-        // TODO this string mess in untested and not so pretty.
-        std::string err = "Invalid channel. Only";
-        err += std::to_string(channels);
-        err += " channel(s) available.";
-        throw std::system_error(ENODEV, std::generic_category(), err);
+    // TODO: Under investigation. Clock rates can't exceed 6Mhz
+    if( xfer->clk > MAX_SPI_CLK_RATE) {
+        xfer->clk = MAX_SPI_CLK_RATE;
+        std::clog << "SPI Clock rate can not exceed " << MAX_SPI_CLK_RATE << "Hz. Reducing clock rate.\n";
     }
 
-    status = SPI_GetChannelInfo(xfer->channel, &devList);
-    APP_CHECK_STATUS(status);
+    // Open an MPSSE instance for SPI0 and store the context
+    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
 
-    status = SPI_OpenChannel(xfer->channel, &devList.ftHandle);
-    APP_CHECK_STATUS(status);
+    // Ensure the context is not NULL and and the mpsse channel is open
+    if (this->mpsse != NULL && !this->mpsse->open) {
+        // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
+        throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
+    }
 
-    status = SPI_InitChannel(devList.ftHandle, &channelConf);
-    APP_CHECK_STATUS(status);
+    ret = spi_read(xfer->rx_buff, xfer->len);
 
-    status = SPI_Read(devList.ftHandle, (uint8 *)&xfer->buff, xfer->len,
-                      reinterpret_cast<uint32 *>(&xfer->bytesTranferred),
-                      SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES |
-                      SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE |
-                      SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE );
-    APP_CHECK_STATUS(status);
+    Close(this->mpsse);
 
+    switch (ret) {
+        case SHOST_RET_LIB_ERR:
+            // TODO printing address whould be nice
+            throw std::system_error(ENXIO, std::generic_category(), "No response from peripheral.");
+            break;
+        case SHOST_RET_HW_ERR:
+            throw std::system_error(EIO, std::generic_category(), "Hardware failure.");
+            break;
+        default:
+            // all is good, no need to do anything.
+            break;
+    }
+    xfer->bytesTranferred = xfer->len;
+
+}
+
+shost_ret_t SPI::spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buffer_len) {
+    shost_ret_t retVal = SHOST_RET_OK;
+
+    // Send the start condition for SPI
+    retVal = (shost_ret_t)Start(mpsse);
+
+    if( SHOST_RET_OK == retVal ) {
+        // Write our buffer and store the data read back
+        retVal = (shost_ret_t)FastTransfer(mpsse, (char*)src_buffer, (char*)dest_buffer, buffer_len);
+    }
+
+    if( SHOST_RET_OK == retVal ) {
+        // Send the stop condition for SPI
+        retVal = (shost_ret_t)Stop(mpsse);
+    }
+
+    return retVal;
+}
+
+shost_ret_t SPI::spi_read(uint8_t *dest_buffer, size_t buffer_len) {
+    shost_ret_t retVal = SHOST_RET_OK;
+
+    // Send the start condition for SPI
+    retVal = (shost_ret_t)Start(mpsse);
+
+    if( SHOST_RET_OK == retVal ) {
+        // Write our buffer
+        retVal = (shost_ret_t)FastRead(mpsse, (char*)dest_buffer, buffer_len);
+    }
+
+    if( SHOST_RET_OK == retVal ) {
+        // Send the stop condition for SPI
+        retVal = (shost_ret_t)Stop(mpsse);
+    }
+
+    return retVal;
 }

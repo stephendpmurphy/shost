@@ -9,7 +9,6 @@
 #define CHECK_NULL(exp){if(exp==NULL){printf("%s:%d:%s():  NULL expression \
 encountered \n",__FILE__, __LINE__, __FUNCTION__);exit(1);}else{;}};
 
-void printfArray(uint8 *buff, uint16 len);
 int util_isFtdiModuleLoaded(void);
 int util_removeFtdiModule(void);
 uint32_t util_getMPSSEchannelCount(void);

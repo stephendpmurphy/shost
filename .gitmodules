@@ -1,6 +1,3 @@
-[submodule "libMPSSE"]
-	path = libMPSSE
-	url = https://github.com/stephendpmurphy/libMPSSE.git
 [submodule "vendor/libmpsse"]
 	path = vendor/libmpsse
 	url = https://github.com/l29ah/libmpsse.git

@@ -10,6 +10,13 @@
 #include "I2C.h"
 #include "Protocol.h"
 
+static void dump_array(uint8_t *arr, int len) {
+    for(int i = 0; i < len; i++) {
+        printf("%02X ", arr[i]);
+    }
+    printf("\n");
+}
+
 int shost_xfer_begin(shost_xfer_t xfer) {
     int retVal = 0;
     Protocol *IO;
@@ -29,7 +36,6 @@ int shost_xfer_begin(shost_xfer_t xfer) {
         default:
             break;
     }
-
 
     if ( (xfer.xferType <= XFER_TYPE_NONE) || (xfer.xferType >= XFER_TYPE__MAX__) ) {
         printf("Invalid transfer type given.\n");
@@ -63,7 +69,7 @@ int shost_xfer_begin(shost_xfer_t xfer) {
             }
 
             printf("%d byte(s) transmitted over %s.\n",
-                0,
+                xfer.bytesTranferred,
                 IO->name);
         }
         catch (const std::system_error &e) {

@@ -17,10 +17,8 @@ I2C::I2C(): Protocol("I²C") {
 void I2C::_write(shost_xfer_t *xfer) {
 
     int ret = 0;
-    // TODO make freq adjustable
-    printf("Frequency set to 100Khz.\n");
     //    open mpsse device
-    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
+    this->mpsse = MPSSE(modes::I2C, xfer->clk, MSB);
 
     if (this->mpsse != NULL && !this->mpsse->open) {
         // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)

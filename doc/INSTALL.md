@@ -5,7 +5,7 @@ sudo apt-get update
 ```
 Once our packages have been updated we can install our needed packages
 ```console
-sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev libftdi autoconf automake libtool
+sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev libftdi-dev autoconf automake libtool
 ```
 With our packages installed we can then clone and install the ```libftdi1``` library. This is an open-source alternative for the low-level USB comms with our FTDI serial bridge device.
 ```console

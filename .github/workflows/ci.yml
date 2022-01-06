@@ -17,12 +17,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install git build-essential libusb-1.0-0-dev swig cmake python-dev libconfuse-dev libboost-all-dev autoconf automake libtool libftdi-dev
 
-    - name: Build & Install libftdi1
-      run: |
-        cd vendor/libftdi && mkdir -p build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../
-        make -j8
-        sudo make install
+    # - name: Build & Install libftdi1
+    #   run: |
+    #     cd vendor/libftdi && mkdir -p build && cd build
+    #     cmake -DCMAKE_INSTALL_PREFIX="/usr/" ../
+    #     make -j8
+    #     sudo make install
 
     - name: Build & Install libmpsse
       run: |

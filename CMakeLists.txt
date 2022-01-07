@@ -20,6 +20,7 @@ include_directories(src
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 set(LIB_SRC ${PROJECT_SOURCE_DIR}/lib/shost.cpp
         ${PROJECT_SOURCE_DIR}/lib/Protocol.cpp
@@ -59,8 +60,7 @@ target_link_libraries(${EXE_NAME} dl ${LIB_NAME})
 set_target_properties(${EXE_NAME} PROPERTIES OUTPUT_NAME ${LIB_NAME})
 
 # Install the cli app to our bin folder
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-install(TARGETS ${EXE_NAME} DESTINATION bin)
+install(TARGETS ${EXE_NAME} RUNTIME DESTINATION bin)
 
 # uninstall target
 if(NOT TARGET uninstall)

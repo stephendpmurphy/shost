@@ -31,7 +31,7 @@ void SPI::_write(shost_xfer_t *xfer) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = spi_write(xfer->tx_buff, xfer->rx_buff, xfer->len);
+    ret = spi_write(xfer->tx_buff, xfer->rx_buff, xfer->tx_len);
 
     Close(this->mpsse);
 
@@ -47,6 +47,7 @@ void SPI::_write(shost_xfer_t *xfer) {
             // all is good, no need to do anything.
             break;
     }
+    xfer->bytesTranferred = xfer->tx_len;
 }
 
 void SPI::_read(shost_xfer_t *xfer) {
@@ -67,7 +68,7 @@ void SPI::_read(shost_xfer_t *xfer) {
         throw std::system_error(EIO, std::generic_category(), ErrorString(this->mpsse));
     }
 
-    ret = spi_read(xfer->rx_buff, xfer->len);
+    ret = spi_read(xfer->rx_buff, xfer->rx_len);
 
     Close(this->mpsse);
 
@@ -83,8 +84,7 @@ void SPI::_read(shost_xfer_t *xfer) {
             // all is good, no need to do anything.
             break;
     }
-    xfer->bytesTranferred = xfer->len;
-
+    xfer->bytesTranferred = xfer->rx_len;
 }
 
 shost_ret_t SPI::spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buffer_len) {

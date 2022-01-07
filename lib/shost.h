@@ -43,6 +43,7 @@ typedef struct {
     uint8_t rx_buff[MAX_BUFF_SIZE];
 } shost_xfer_t;
 
+int shost_getConnectedDevices(bool printDevInfo);
 int shost_xfer_begin(shost_xfer_t xfer);
 
 #endif // _XFER_H_

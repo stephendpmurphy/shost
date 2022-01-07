@@ -2,8 +2,8 @@
 #include <argz.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "shost.h"
-#include "util.h"
 #include "version.h"
 
 const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
@@ -148,8 +148,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             break;
 
         case 777:
-            // util_printMPSSEchannelInfo( util_getMPSSEchannelCount() );
-            // Return 1 so we stop parsing arguments after printing available channels
+            shost_getConnectedDevices(true);
             return 1;
 
         case ARGP_KEY_END:

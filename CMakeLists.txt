@@ -27,9 +27,7 @@ set(LIB_SRC ${PROJECT_SOURCE_DIR}/lib/shost.cpp
         ${PROJECT_SOURCE_DIR}/lib/I2C.cpp
 )
 
-set(APP_SRC ${PROJECT_SOURCE_DIR}/src/main.cpp
-        ${PROJECT_SOURCE_DIR}/src/util.cpp
-)
+set(APP_SRC ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 add_library(${LIB_NAME} ${LIB_SRC})
 

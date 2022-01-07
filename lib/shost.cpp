@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 #include <system_error>
+#include <ftdi.h>
 #include "shost.h"
 #include "SPI.h"
 #include "I2C.h"
@@ -17,11 +17,58 @@ static void dump_array(uint8_t *arr, int len) {
     printf("\n");
 }
 
+int shost_getConnectedDevices(bool printDevInfo) {
+    int devCount = 0;
+    int i = 0;
+    struct ftdi_context *ftdi;
+    struct ftdi_device_list *devlist, *curdev;
+    char manufacturer[128], description[128];
+
+    if ((ftdi = ftdi_new()) == 0)
+    {
+        fprintf(stderr, "ftdi_new failed\n");
+        return 0;
+    }
+
+    if ((devCount = ftdi_usb_find_all(ftdi, &devlist, 0, 0)) < 0)
+    {
+        fprintf(stderr, "ftdi_usb_find_all failed: %d (%s)\n", devCount, ftdi_get_error_string(ftdi));
+        devCount = 0;
+        goto do_deinit;
+    }
+
+    if(printDevInfo) {
+        printf("Number of FTDI devices found: %d\n", devCount);
+
+        for (curdev = devlist; curdev != NULL; i++) {
+            if( ftdi_usb_get_strings(ftdi, curdev->dev, manufacturer, 128, description, 128, NULL, 0) < 0) {
+                fprintf(stderr, "ftdi_usb_get_strings failed: #%d (%s)\n", i, ftdi_get_error_string(ftdi));
+                devCount = 0;
+                goto done;
+            }
+            printf("\nDevice %d:\nManufacturer: %s\nDescription: %s\n", i, manufacturer, description);
+            curdev = curdev->next;
+        }
+    }
+
+done:
+    ftdi_list_free(&devlist);
+do_deinit:
+    ftdi_free(ftdi);
+
+    return devCount;
+}
+
 int shost_xfer_begin(shost_xfer_t xfer) {
     int retVal = 0;
     Protocol *IO;
 
     // Check if we have any available channels to begin with
+    if(!shost_getConnectedDevices(false)) {
+        printf("No devices found. Ensure your device is connected and the proper UDEV rules have been added.\n");
+        retVal = -1;
+        goto CLEANUP;
+    }
 
     // Setup the interface class
     switch (xfer.intf) {
@@ -34,6 +81,9 @@ int shost_xfer_begin(shost_xfer_t xfer) {
             break;
 
         default:
+            retVal = -1;
+            printf("Invalid interface type given.\n");
+            goto CLEANUP;
             break;
     }
 
@@ -84,6 +134,7 @@ int shost_xfer_begin(shost_xfer_t xfer) {
         }
     }
 
+CLEANUP:
     // Return
     return retVal;
 }

@@ -59,6 +59,7 @@ target_link_libraries(${EXE_NAME} dl ${LIB_NAME})
 set_target_properties(${EXE_NAME} PROPERTIES OUTPUT_NAME ${LIB_NAME})
 
 # Install the cli app to our bin folder
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${EXE_NAME} DESTINATION bin)
 
 # uninstall target

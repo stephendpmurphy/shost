@@ -204,7 +204,7 @@ int main(int argc, char *argv[] ) {
         {"channel", 'c', "NUM", 0, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
         {"frequency", 'f', "NUM", 0, "Serial communication freqeuncy"},
         {0,0,0,0, "Serial WRITE options:", 2},
-        {"data", 'd', "ARRAY", 0, "Comma delimted data to be written in hex."},
+        {"data", 'd', "ARRAY", 0, "Comma delimited data to be written in hex."},
         {0,0,0,0, "Serial READ options:", 3},
         {"length", 'l', "NUM", 0, "Length of data to be read during the serial transfer"},
         {0,0,0,0, "I2C options:", 4},

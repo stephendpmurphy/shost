@@ -48,6 +48,8 @@ static int8_t parseCommaDelimetedData(char *arg, uint8_t *destBuff, int *buffInd
             return -1;
         }
         else if( (!memcmp(&arg[i], ",", 0x01)) || (i == listLength) ) {
+            // Ensure we clear out our hex character array before parsing the next
+            memset(hexCharacter, 0x00, sizeof(hexCharacter));
             // We found a comma. grab the substring from last commad
             // to our current index and try to parse it as a hex value
             memcpy(hexCharacter, &arg[lastCommaIndex], i - lastCommaIndex);
@@ -119,7 +121,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 xfer_ptr->xferType = XFER_TYPE_READ_WRITE;
             }
             else {
-                argp_failure(state, 0,0,"Invalid transmittion type provided.");
+                argp_failure(state, 0,0,"Invalid transfer type provided.");
+                return 1;
             }
             break;
 
@@ -135,7 +138,10 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
 
         case 'd':
             // Parse the comma delimeted string into a data array
-            parseCommaDelimetedData(arg, xfer_ptr->tx_buff, &xfer_ptr->len);
+            if(parseCommaDelimetedData(arg, xfer_ptr->tx_buff, &xfer_ptr->len) < 0) {
+                argp_failure(state, 0,0,"There was a problem parsing the data list.");
+                return 1;
+            }
             break;
 
         case 'l':

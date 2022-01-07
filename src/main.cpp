@@ -11,7 +11,8 @@ const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost
 volatile shost_xfer_t xfer = {
     10000, // Clock
     0, // Channel
-    0, // Length
+    0, // Tx Length
+    0, // Rx Length
     0, // Bytes transferred
     0, // Address
     0, // Register
@@ -38,6 +39,13 @@ static int8_t parseCommaDelimetedData(char *arg, uint8_t *destBuff, int *buffInd
         return -1;
     }
 
+    // Clear out our buffIndex (length) before starting
+    if( *buffIndex ) {
+        printf("Length set via the -l option. Clearing and setting length from -d buffer length.\n");
+        *buffIndex = 0;
+    }
+
+    // Determine out list length
     listLength = strlen(arg);
 
     // Loop through the list of characters processing until we find a comma
@@ -48,6 +56,8 @@ static int8_t parseCommaDelimetedData(char *arg, uint8_t *destBuff, int *buffInd
             return -1;
         }
         else if( (!memcmp(&arg[i], ",", 0x01)) || (i == listLength) ) {
+            // Ensure we clear out our hex character array before parsing the next
+            memset(hexCharacter, 0x00, sizeof(hexCharacter));
             // We found a comma. grab the substring from last commad
             // to our current index and try to parse it as a hex value
             memcpy(hexCharacter, &arg[lastCommaIndex], i - lastCommaIndex);
@@ -119,7 +129,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 xfer_ptr->xferType = XFER_TYPE_READ_WRITE;
             }
             else {
-                argp_failure(state, 0,0,"Invalid transmittion type provided.");
+                argp_failure(state, 0,0,"Invalid transfer type provided.");
+                return 1;
             }
             break;
 
@@ -135,12 +146,15 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
 
         case 'd':
             // Parse the comma delimeted string into a data array
-            parseCommaDelimetedData(arg, xfer_ptr->tx_buff, &xfer_ptr->len);
+            if(parseCommaDelimetedData(arg, xfer_ptr->tx_buff, &xfer_ptr->tx_len) < 0) {
+                argp_failure(state, 0,0,"There was a problem parsing the data list.");
+                return 1;
+            }
             break;
 
         case 'l':
             // Parse the length and store it in our xfer object
-            xfer_ptr->len = atoi(arg);
+            xfer_ptr->rx_len = atoi(arg);
             break;
 
         case 'v':
@@ -156,12 +170,18 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_state_help(state, stdout, ARGP_HELP_STD_HELP);
             }
             else {
-                if( 0 == shost_xfer_begin(*xfer_ptr) ) {
+                if( 0 == shost_xfer_begin(xfer_ptr) ) {
                     // Print the TX and RX buffers
-                    printf("TX: ");
-                    dump_array(xfer_ptr->tx_buff, xfer_ptr->len);
-                    printf("RX: ");
-                    dump_array(xfer_ptr->rx_buff, xfer_ptr->len);
+                    if( xfer_ptr->bytesTranferred ) {
+                        if( xfer_ptr->tx_len ) {
+                            printf("TX: ");
+                            dump_array(xfer_ptr->tx_buff, xfer_ptr->bytesTranferred);
+                        }
+                        if( xfer_ptr->rx_len ) {
+                            printf("RX: ");
+                            dump_array(xfer_ptr->rx_buff, xfer_ptr->bytesTranferred);
+                        }
+                    }
                 }
             }
             break;
@@ -180,17 +200,19 @@ int main(int argc, char *argv[] ) {
     struct argp_option cli_options[] = {
         {0,0,0,0, "General serial options:", 1},
         {"interface", 'i', "SPI || I2C", 0, "Serial interface selection"},
-        {"xfer", 'x', "r || w || ", 0, "Serial transfer type - Read or Write (SPI Read/Writes can be initated using a Write transfer)"},
+        {"xfer", 'x', "r || w || rw", 0, "Serial transfer type - Read (r), Write (w) or Read/Write (rw)"},
         {"channel", 'c', "NUM", 0, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
         {"frequency", 'f', "NUM", 0, "Serial communication freqeuncy"},
+        {0,0,0,0, "Serial WRITE options:", 2},
         {"data", 'd', "ARRAY", 0, "Comma delimted data to be written in hex."},
+        {0,0,0,0, "Serial READ options:", 3},
         {"length", 'l', "NUM", 0, "Length of data to be read during the serial transfer"},
-        {0,0,0,0, "I2C options:", 2},
+        {0,0,0,0, "I2C options:", 4},
         {"address", 'a', "NUM", 0, "Address of the I2C device you want to communicate with"},
         {"register", 'r', "NUM", 0, "Address of the I2C register you want to interact with"},
-        {0,0,0,0, "Debug options:", 3},
-        {"verbose", 'v', "NUM", OPTION_ARG_OPTIONAL, "Increase verbosity of logging"},
-        {"list", 777, 0, OPTION_ARG_OPTIONAL, "Display information about connected FTDI devices and available MPSSE channels"},
+        {0,0,0,0, "Debug options:", 5},
+        {"verbose", 'v', 0, OPTION_ARG_OPTIONAL, "Execute with verbose logging"},
+        {"list", 777, 0, OPTION_ARG_OPTIONAL, "Display information about connected FTDI devices"},
         {0}
     };
 

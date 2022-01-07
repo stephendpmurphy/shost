@@ -33,7 +33,8 @@ typedef enum {
 typedef struct {
     int clk;
     int channel;
-    int len;
+    int tx_len;
+    int rx_len;
     int bytesTranferred;
     int address;
     int _register;
@@ -44,6 +45,6 @@ typedef struct {
 } shost_xfer_t;
 
 int shost_getConnectedDevices(bool printDevInfo);
-int shost_xfer_begin(shost_xfer_t xfer);
+int shost_xfer_begin(shost_xfer_t *xfer);
 
 #endif // _XFER_H_

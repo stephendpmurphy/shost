@@ -59,7 +59,7 @@ do_deinit:
     return devCount;
 }
 
-int shost_xfer_begin(shost_xfer_t xfer) {
+int shost_xfer_begin(shost_xfer_t *xfer) {
     int retVal = 0;
     Protocol *IO;
 
@@ -71,7 +71,7 @@ int shost_xfer_begin(shost_xfer_t xfer) {
     }
 
     // Setup the interface class
-    switch (xfer.intf) {
+    switch (xfer->intf) {
         case XFER_INTF_SPI:
             IO = new SPI();
             break;
@@ -87,26 +87,30 @@ int shost_xfer_begin(shost_xfer_t xfer) {
             break;
     }
 
-    if ( (xfer.xferType <= XFER_TYPE_NONE) || (xfer.xferType >= XFER_TYPE__MAX__) ) {
+    if ( (xfer->xferType <= XFER_TYPE_NONE) || (xfer->xferType >= XFER_TYPE__MAX__) ) {
         printf("Invalid transfer type given.\n");
         retVal = -1;
     }
     else {
         printf("Starting a %s using %s on channel %d with a len of %d bytes at %dHz.\n",
-                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
+                (xfer->xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer->xferType == XFER_TYPE_READ ? "READ" : (xfer->xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
                 IO->name,
-                xfer.channel,
-                xfer.len,
-                xfer.clk);
+                xfer->channel,
+                (xfer->xferType == XFER_TYPE_WRITE ? xfer->tx_len: (xfer->xferType == XFER_TYPE_READ ? xfer->rx_len : (xfer->xferType == XFER_TYPE_READ_WRITE ? xfer->tx_len : 0))),
+                xfer->clk);
 
         try {
-            switch (xfer.xferType) {
+            switch (xfer->xferType) {
                 case XFER_TYPE_WRITE:
-                    IO->write(&xfer);
+                    // As a cleanup - Since we are writing - Zero out the rx length
+                    xfer->rx_len = 0;
+                    IO->write(xfer);
                     break;
 
                 case XFER_TYPE_READ:
-                    IO->read(&xfer);
+                    // As a cleanup - Since ware reading - Zero out the tx length
+                    xfer->tx_len = 0;
+                    IO->read(xfer);
                     break;
 
                 case XFER_TYPE_READ_WRITE:
@@ -118,13 +122,15 @@ int shost_xfer_begin(shost_xfer_t xfer) {
                     break;
             }
 
-            printf("%d byte(s) transmitted over %s.\n",
-                xfer.bytesTranferred,
-                IO->name);
+            if( retVal >= 0) {
+                printf("%d byte(s) transmitted over %s.\n",
+                    xfer->bytesTranferred,
+                    IO->name);
+            }
         }
         catch (const std::system_error &e) {
             printf("Failed to %s: %s\n",
-                (xfer.xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer.xferType == XFER_TYPE_READ ? "READ" : (xfer.xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
+                (xfer->xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer->xferType == XFER_TYPE_READ ? "READ" : (xfer->xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
                 e.what());
             retVal = -1;
         }

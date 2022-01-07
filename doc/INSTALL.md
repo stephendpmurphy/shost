@@ -1,7 +1,12 @@
 # Installation Guide
-To begin with using the cli ```shost``` binary or developing you're own app using ```shost```, we will need to install several dependencies.
+To begin with using the cli ```shost``` binary or developing you're own app using ```shost```, we will need to install several dependencies and install new udev rules allowing our application to communicate with connected FTDI hardware.
 
-Ensure you have cloned the submodules provided in this repository
+To add the new udev rules, execute the following from the repos root folder:
+```console
+sudo cp ./doc/99-ftdi.rules /etc/udev/rules.d
+sudo udevadm control --reload-rules && udevadm trigger
+```
+Once our udev rules are installed we can work on the software installation. Ensure you have cloned the submodules provided in this repository
 ```console
 git submodule update --init --recursive
 ```

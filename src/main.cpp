@@ -7,6 +7,8 @@
 #include "version.h"
 
 const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
+static char *outputFilePath;
+static FILE *outBin = NULL;
 
 volatile shost_xfer_t xfer = {
     10000, // Clock
@@ -157,6 +159,11 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             xfer_ptr->rx_len = atoi(arg);
             break;
 
+        case 'o':
+            outputFilePath = (char *)malloc(strlen(arg));
+            strcpy(outputFilePath, arg);
+            break;
+
         case 'v':
             // TODO: Implement verbosity
             break;
@@ -180,6 +187,14 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                         if( xfer_ptr->rx_len ) {
                             printf("RX: ");
                             dump_array(xfer_ptr->rx_buff, xfer_ptr->bytesTranferred);
+
+                            if( outputFilePath != NULL ) {
+                                // If the filepath isn't NULL, then write it out;
+                                outBin = fopen(outputFilePath,"wb");  // w for write, b for binary
+                                fwrite(xfer_ptr->rx_buff, 0x01, xfer_ptr->bytesTranferred, outBin); // write 10 bytes from our buffer
+                                fclose(outBin);
+                                free(outputFilePath);
+                            }
                         }
                     }
                 }
@@ -213,6 +228,7 @@ int main(int argc, char *argv[] ) {
         {0,0,0,0, "Debug options:", 5},
         {"verbose", 'v', 0, OPTION_ARG_OPTIONAL, "Execute with verbose logging"},
         {"list", 777, 0, OPTION_ARG_OPTIONAL, "Display information about connected FTDI devices"},
+        {"out", 'o', 0, 0, "Filepath to write RX data to after the transfer completes."},
         {0}
     };
 

@@ -7,8 +7,8 @@
 #include "version.h"
 
 const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
-static char *outputFilePath;
-static FILE *outBin = NULL;
+char *outputFilePath = NULL;
+FILE *outBin = NULL;
 
 volatile shost_xfer_t xfer = {
     10000, // Clock
@@ -160,7 +160,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             break;
 
         case 'o':
-            outputFilePath = (char *)malloc(strlen(arg));
+            outputFilePath = (char *)malloc(strlen(arg) + 1);
             strcpy(outputFilePath, arg);
             break;
 
@@ -189,6 +189,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                             dump_array(xfer_ptr->rx_buff, xfer_ptr->bytesTranferred);
 
                             if( outputFilePath != NULL ) {
+                                printf("Writing %d bytes from RX buffer to %s\n", xfer_ptr->bytesTranferred, outputFilePath);
                                 // If the filepath isn't NULL, then write it out;
                                 outBin = fopen(outputFilePath,"wb");  // w for write, b for binary
                                 fwrite(xfer_ptr->rx_buff, 0x01, xfer_ptr->bytesTranferred, outBin); // write 10 bytes from our buffer
@@ -219,7 +220,7 @@ int main(int argc, char *argv[] ) {
         {"channel", 'c', "NUM", 0, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
         {"frequency", 'f', "NUM", 0, "Serial communication freqeuncy"},
         {0,0,0,0, "Serial WRITE options:", 2},
-        {"data", 'd', "ARRAY", 0, "Comma delimited data to be written in hex."},
+        {"data", 'd', "ARRAY", 0, "Comma delimited data to be written in hex (0x0B,0x0E,0x0E,0x0F)"},
         {0,0,0,0, "Serial READ options:", 3},
         {"length", 'l', "NUM", 0, "Length of data to be read during the serial transfer"},
         {0,0,0,0, "I2C options:", 4},
@@ -228,7 +229,7 @@ int main(int argc, char *argv[] ) {
         {0,0,0,0, "Debug options:", 5},
         {"verbose", 'v', 0, OPTION_ARG_OPTIONAL, "Execute with verbose logging"},
         {"list", 777, 0, OPTION_ARG_OPTIONAL, "Display information about connected FTDI devices"},
-        {"out", 'o', 0, 0, "Filepath to write RX data to after the transfer completes."},
+        {"out", 'o', "PATH", 0, "Filepath to write RX data to after the transfer completes"},
         {0}
     };
 

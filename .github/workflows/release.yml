@@ -14,6 +14,8 @@ jobs:
 
     - name: Install Dependencies
       run:  |
+        sudo apt-get update
+        sudo apt-get install git build-essential libusb-1.0-0-dev cmake
 
     - name: Compile
       run: mkdir -p build && cd build && cmake .. && make -j8

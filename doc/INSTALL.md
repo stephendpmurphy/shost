@@ -5,7 +5,7 @@ Now that your OS is setup, either in Native Linux or WSL2, lets begin.
 
 ## System Setup
 To add the new udev rules, execute the following from the repos root folder:
-```md
+```console
 # Copy over our rules to the udev/rules.d folder
 sudo cp ./doc/99-ftdi.rules /etc/udev/rules.d
 
@@ -34,6 +34,14 @@ Now that we have all of the latest source pulled we can now build and install th
 mkdir build && cd build
 cmake ..
 make -j8
-sudo make install
 ```
 Congratulations 🎉 The freshly built ```shost``` cli and ```libshost.a``` static library can be found in the ```output/``` folder.
+
+If you wish to install the shost cli, making it accessible from the command line at any time, you can simply execute the following:
+```console
+sudo make install
+```
+and if you ever need to uinstall, return to this repos ```build/``` folder and execute the following:
+```console
+sudo make uninstall
+```

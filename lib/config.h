@@ -14,7 +14,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `ftdi1' library (-lftdi1). */
-#define HAVE_LIBFTDI1 1
+// #define HAVE_LIBFTDI1 1
 
 /* Use libftdi >=1.5. */
 #define HAVE_LIBFTDI1_5 1

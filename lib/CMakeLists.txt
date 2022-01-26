@@ -16,5 +16,5 @@ set(LIB_SRC ${STATIC_LIB_SHOST_SRC_DIR}/shost.cpp
 # Create our static library
 add_library(${STATIC_LIB_NAME} ${LIB_SRC})
 
-target_include_directories(${STATIC_LIB_NAME} PUBLIC ${STATIC_LIB_FTDI_SRC_DIR})
+target_include_directories(${STATIC_LIB_NAME} PUBLIC  ${STATIC_LIB_SHOST_SRC_DIR} ${LIB_MPSSE_SRC_DIR} ${STATIC_LIB_FTDI_SRC_DIR})
 target_link_libraries(${STATIC_LIB_NAME} ftdi1-static)

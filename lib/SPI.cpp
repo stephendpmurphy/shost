@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <system_error>
-#include <mpsse.h>
 #include "shost.h"
 #include "SPI.h"
+#include "mpsse.h"
 
 #define MAX_SPI_CLK_RATE 6000000
 

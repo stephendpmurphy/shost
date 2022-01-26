@@ -17,6 +17,9 @@ I2C::I2C(): Protocol("I²C") {
 void I2C::_write(shost_xfer_t *xfer) {
 
     int ret = 0;
+    // TODO check xfer->address and xfer->_register
+//    assert(xfer->address > 0 && "Address is required!");
+//    assert(xfer->_register >= 0 && "register is required!");
     //    open mpsse device
     this->mpsse = MPSSE(modes::I2C, xfer->clk, MSB);
 
@@ -46,6 +49,10 @@ void I2C::_write(shost_xfer_t *xfer) {
 
 void I2C::_read(shost_xfer_t *xfer) {
     int ret = 0;
+    // TODO check xfer->address and xfer->_register
+//    assert(0 >= xfer->address >= 0x7F && "Address is required!");
+//    assert(xfer->_register >= 0 && "register is required!");
+
     // TODO make freq adjustable
     printf("Frequency set to 100Khz.\n");
     //    open mpsse device
@@ -100,14 +107,6 @@ uint8_t I2C::i2c_write(uint8_t address, uint8_t reg, uint8_t *data, size_t data_
 }
 
 
-/**
- * Read data from I2C device
- * @param address address of slave
- * @param reg register to read
- * @param buffer store read data here
- * @param buffer_size read size
- * @return 0 if success, 1 if no response and 2 if hardware failed.
- */
 uint8_t I2C::i2c_read(uint8_t address, uint8_t reg, uint8_t *buffer, size_t buffer_size) {
 
     uint8_t ret = 2;

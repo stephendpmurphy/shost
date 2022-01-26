@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">shost</h1>
+  <h1 align="center">💻 shost (serial host)</h1>
   <p align="center">
-    FTDI MPSSE CLI application & static library for SPI, I2C and GPIO control
+    GUI, CLI and static library for connecting to FTDI MPSSE capable devices
   </p>
 </p>
 

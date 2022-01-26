@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <libftdi1/ftdi.h>
+#include "ftdi.h"
 
 #define MAX_BUFF_SIZE 256
 

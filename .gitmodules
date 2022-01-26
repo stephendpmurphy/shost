@@ -3,4 +3,4 @@
 	url = https://github.com/l29ah/libmpsse.git
 [submodule "vendor/libftdi"]
 	path = vendor/libftdi
-	url = git://developer.intra2net.com/libftdi
+	url = https://github.com/stephendpmurphy/libftdi

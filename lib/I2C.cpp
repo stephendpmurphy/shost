@@ -3,7 +3,7 @@
 //
 //#include "libMPSSE_i2c.h"
 #include "I2C.h"
-#include <mpsse.h>
+#include "mpsse.h"
 #include <malloc.h>
 #include <memory.h>
 #include <stdlib.h>

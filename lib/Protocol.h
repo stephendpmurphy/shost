@@ -24,7 +24,7 @@ public:
     Protocol(const char* name);
 
     /**
-     * read data using set protocol.
+     * @brief read data using set protocol.
      * Read data is returned in rx_buff
      * @param xfer requires:
      *  -   rx_len,     length of data to read
@@ -42,7 +42,7 @@ public:
     void read(shost_xfer_t* xfer);
 
     /**
-     * Write data using set protocol.
+     * @brief Write data using set protocol.
      * @param xfer requires:
      *  -   tx_len,     length of data to write
      *  -   clk,        clock speed to use (Hertz)
@@ -59,7 +59,7 @@ public:
     void write(shost_xfer_t* xfer);
 
     /**
-     * Not yet implemented!
+     * @brief Not yet implemented!
      * @param xfer
      */
     void read_write(shost_xfer_t* xfer);
@@ -75,13 +75,13 @@ protected:
 private:
 
     /**
-     * Protocol specific implementation of the write command.
+     * @brief Protocol specific implementation of the write command.
      * @param xfer supply documentation on required parameters!
      */
     void virtual _write(shost_xfer_t* xfer) = 0;
 
     /**
-     * Protocol specific implementation of the read command.
+     * @brief Protocol specific implementation of the read command.
      * @param xfer supply documentation on required parameters!
      */
     void virtual _read(shost_xfer_t* xfer) = 0;

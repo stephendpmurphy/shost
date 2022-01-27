@@ -8,11 +8,16 @@
 #include "mpsse.h"
 
 #define MAX_SPI_CLK_RATE 6000000
-
+/**
+ * @brief SPI Controller
+ */
 SPI::SPI(): Protocol("SPI") {
 
 }
 
+/**
+ * @brief Write using SPI
+ */
 void SPI::_write(shost_xfer_t *xfer) {
     shost_ret_t ret = SHOST_RET_OK;
 
@@ -50,6 +55,9 @@ void SPI::_write(shost_xfer_t *xfer) {
     xfer->bytesTranferred = xfer->tx_len;
 }
 
+/**
+ * @brief Read using SPI
+ */
 void SPI::_read(shost_xfer_t *xfer) {
     shost_ret_t ret = SHOST_RET_OK;
 
@@ -87,6 +95,9 @@ void SPI::_read(shost_xfer_t *xfer) {
     xfer->bytesTranferred = xfer->rx_len;
 }
 
+/**
+ * @brief Write data to SPI device
+ */
 shost_ret_t SPI::spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buffer_len) {
     shost_ret_t retVal = SHOST_RET_OK;
 
@@ -106,6 +117,9 @@ shost_ret_t SPI::spi_write(uint8_t *src_buffer, uint8_t *dest_buffer, size_t buf
     return retVal;
 }
 
+/**
+ * @brief Read data from the SPI device
+ */
 shost_ret_t SPI::spi_read(uint8_t *dest_buffer, size_t buffer_len) {
     shost_ret_t retVal = SHOST_RET_OK;
 

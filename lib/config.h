@@ -13,14 +13,8 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the `ftdi1' library (-lftdi1). */
-// #define HAVE_LIBFTDI1 1
-
 /* Use libftdi >=1.5. */
 #define HAVE_LIBFTDI1_5 1
-
-/* Define to 1 if you have the <libftdi1/ftdi.h> header file. */
-#define HAVE_LIBFTDI1_FTDI_H 1
 
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1

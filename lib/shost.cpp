@@ -10,6 +10,9 @@
 #include "I2C.h"
 #include "Protocol.h"
 
+/**
+ * @brief Dump the contents of a provided array
+*/
 static void dump_array(uint8_t *arr, int len) {
     for(int i = 0; i < len; i++) {
         printf("%02X ", arr[i]);
@@ -17,6 +20,9 @@ static void dump_array(uint8_t *arr, int len) {
     printf("\n");
 }
 
+/**
+ * @brief Get all of the compatible connected devices
+*/
 int shost_getConnectedDevices(bool printDevInfo) {
     int devCount = 0;
     int i = 0;
@@ -59,6 +65,9 @@ do_deinit:
     return devCount;
 }
 
+/**
+ * @brief Begin a transfer using shost
+*/
 int shost_xfer_begin(shost_xfer_t *xfer) {
     int retVal = 0;
     Protocol *IO;

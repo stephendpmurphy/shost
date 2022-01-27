@@ -7,6 +7,9 @@
 #include <cassert>
 #include "Protocol.h"
 
+/**
+ * @brief read data using set protocol.
+ */
 void Protocol::read(shost_xfer_t* xfer) {
     assert(!(xfer->rx_len < 1) && "Length must be greater than 0 when executing a \"read\" transfer.");
     assert(xfer->clk > 0 && "Clock should be atleast 1Hz!");
@@ -16,6 +19,9 @@ void Protocol::read(shost_xfer_t* xfer) {
     _read(xfer);
 }
 
+/**
+ * @brief Write data using set protocol.
+ */
 void Protocol::write(shost_xfer_t* xfer) {
     assert(!(xfer->tx_len < 1) && "Length must be greater than 0 when executing a \"write\" transfer.");
     assert(xfer->clk > 0 && "Clock should be atleast 1Hz!");
@@ -25,10 +31,16 @@ void Protocol::write(shost_xfer_t* xfer) {
     _write(xfer);
 }
 
+/**
+ * @brief Not yet implemented!
+ */
 void Protocol::read_write(shost_xfer_t* xfer) {
 // TODO
 }
 
+/**
+ * Protocol object, should be created by child to give a proper name used for documentation
+ */
 Protocol::Protocol(const char *name): name(name) {
 
 }

@@ -5,8 +5,6 @@
 #include <stddef.h>
 #include "ftdi.h"
 
-#define MAX_BUFF_SIZE 256
-
 typedef enum {
     SHOST_RET_OK = 0x00,
     SHOST_RET_LIB_ERR,
@@ -40,8 +38,8 @@ typedef struct {
     int _register;
     shost_xfer_intf_t intf;
     shost_xfer_type_t xferType;
-    uint8_t tx_buff[MAX_BUFF_SIZE];
-    uint8_t rx_buff[MAX_BUFF_SIZE];
+    uint8_t *tx_buff;
+    uint8_t *rx_buff;
 } shost_xfer_t;
 
 int shost_getConnectedDevices(bool printDevInfo);

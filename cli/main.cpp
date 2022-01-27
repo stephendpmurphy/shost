@@ -6,23 +6,13 @@
 #include "shost.h"
 #include "version.h"
 
+#define MAX_TX_BUFFER_SIZE 2048
+#define MAX_RX_BUFFER_SIZE 2048
+
 const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
+const char *github_repository_address = "https://github.com/stephendpmurphy/shost";
 char *outputFilePath = NULL;
 FILE *outBin = NULL;
-
-volatile shost_xfer_t xfer = {
-    10000, // Clock
-    0, // Channel
-    0, // Tx Length
-    0, // Rx Length
-    0, // Bytes transferred
-    0, // Address
-    0, // Register
-    XFER_INTF_NONE, // Interface
-    XFER_TYPE_NONE, // Transfer Type
-    {0x00}
-};
-
 
 static void dump_array(uint8_t *arr, int len) {
     for(int i = 0; i < len; i++) {
@@ -152,11 +142,20 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
                 argp_failure(state, 0,0,"There was a problem parsing the data list.");
                 return 1;
             }
+
+            if(xfer_ptr->tx_len > MAX_TX_BUFFER_SIZE) {
+                argp_failure(state,0,0,"TX Transfer size (%d) greater than the allocated buff size (%d)", xfer_ptr->tx_len, MAX_TX_BUFFER_SIZE);
+                return 1;
+            }
             break;
 
         case 'l':
             // Parse the length and store it in our xfer object
             xfer_ptr->rx_len = atoi(arg);
+            if(xfer_ptr->rx_len > MAX_RX_BUFFER_SIZE) {
+                argp_failure(state,0,0,"RX Transfer size (%d) greater than the allocated buff size (%d)", xfer_ptr->rx_len, MAX_RX_BUFFER_SIZE);
+                return 1;
+            }
             break;
 
         case 'o':
@@ -208,7 +207,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
 static void print_version(FILE *stream, struct argp_state *state) {
     fprintf(stream, "shost v%d.%d.%d\n", SHOST_VERSION_MAJOR, SHOST_VERSION_MINOR, SHOST_VERSION_PATCH);
     fprintf(stream, "MIT License - Copyright (c) 2022 Stephen Murphy\n");
-    fprintf(stream, "written by @stephendpmurphy\n");
+    fprintf(stream, "%s\n", github_repository_address);
 }
 
 int main(int argc, char *argv[] ) {
@@ -231,6 +230,23 @@ int main(int argc, char *argv[] ) {
         {"list", 777, 0, OPTION_ARG_OPTIONAL, "Display information about connected FTDI devices"},
         {"out", 'o', "PATH", 0, "Filepath to write RX data to after the transfer completes"},
         {0}
+    };
+
+    // Create our buffers for holding the TX and RX data
+    uint8_t TX_BUFFER[MAX_TX_BUFFER_SIZE] = {0x00};
+    uint8_t RX_BUFFER[MAX_RX_BUFFER_SIZE] = {0x00};
+    volatile shost_xfer_t xfer = {
+        10000, // Clock
+        0, // Channel
+        0, // Tx Length
+        0, // Rx Length
+        0, // Bytes transferred
+        0, // Address
+        0, // Register
+        XFER_INTF_NONE, // Interface
+        XFER_TYPE_NONE, // Transfer Type
+        TX_BUFFER,
+        RX_BUFFER
     };
 
     // Creat our argp struct

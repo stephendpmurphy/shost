@@ -37,13 +37,32 @@ typedef enum {
     XFER_TYPE__MAX__        /* __MAX__ transfer */
 } shost_xfer_type_t;
 
+
+/**
+ * @brief shost channel for transfer
+ */
 typedef enum {
-    XFER_CH_A = 0x00,
-    XFER_CH_B,
-    XFER_CH_C,
-    XFER_CH_D,
-    XFER_CH__MAX__
+    XFER_CH_A = 0x00,   /* Channel A */
+    XFER_CH_B,          /* Channel B */
+    XFER_CH_C,          /* Channel C */
+    XFER_CH_D,          /* Channel D */
+    XFER_CH__MAX__      /* Channel __MAX__ */
 } shost_xfer_channel_t;
+
+/**
+ * @brief shost device information
+ */
+typedef struct {
+    char manufacturer[128];
+    char description[128];
+} shost_device_info_t;
+
+/**
+ * @brief shost list for holding connected devices
+ */
+typedef struct {
+    shost_device_info_t info[128];
+} shost_connected_devices_t;
 
 /**
  * @brief shost transfer object
@@ -64,10 +83,10 @@ typedef struct {
 
 /**
  * @brief Get all of the compatible connected devices
- * @param printDevInfo Optionally print out the connected device information
+ * @param *connectedDevices Pointer to array where connected device strings will be stored
  * @return number of connected devices
  */
-int shost_getConnectedDevices(bool printDevInfo);
+int shost_getConnectedDevices(shost_connected_devices_t *connectedDevices);
 
 /**
  * @brief Begin a transfer using shost

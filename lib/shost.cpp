@@ -23,7 +23,7 @@ static void dump_array(uint8_t *arr, int len) {
 /**
  * @brief Get all of the compatible connected devices
 */
-int shost_getConnectedDevices(bool printDevInfo) {
+int shost_getConnectedDevices(shost_connected_devices_t *connectedDevices) {
     int devCount = 0;
     int i = 0;
     struct ftdi_context *ftdi;
@@ -36,6 +36,7 @@ int shost_getConnectedDevices(bool printDevInfo) {
         return 0;
     }
 
+    // Find how many FTDI devices are connected
     if ((devCount = ftdi_usb_find_all(ftdi, &devlist, 0, 0)) < 0)
     {
         fprintf(stderr, "ftdi_usb_find_all failed: %d (%s)\n", devCount, ftdi_get_error_string(ftdi));
@@ -43,18 +44,21 @@ int shost_getConnectedDevices(bool printDevInfo) {
         goto do_deinit;
     }
 
-    if(printDevInfo) {
-        printf("Number of FTDI devices found: %d\n", devCount);
-
+    if( connectedDevices != NULL ) {
+        // Store the string information for all the devices
         for (curdev = devlist; curdev != NULL; i++) {
-            if( ftdi_usb_get_strings(ftdi, curdev->dev, manufacturer, 128, description, 128, NULL, 0) < 0) {
+            if( ftdi_usb_get_strings(ftdi, curdev->dev,
+                connectedDevices->info[i].manufacturer, sizeof(connectedDevices->info[i].manufacturer),
+                connectedDevices->info[i].description, sizeof(connectedDevices->info[i].description), NULL, 0) < 0) {
                 fprintf(stderr, "ftdi_usb_get_strings failed: #%d (%s)\n", i, ftdi_get_error_string(ftdi));
                 devCount = 0;
                 goto done;
             }
-            printf("\nDevice %d:\nManufacturer: %s\nDescription: %s\n", i, manufacturer, description);
             curdev = curdev->next;
         }
+    }
+    else {
+        goto do_deinit;
     }
 
 done:
@@ -73,7 +77,7 @@ int shost_xfer_begin(shost_xfer_t *xfer) {
     Protocol *IO;
 
     // Check if we have any available channels to begin with
-    if(!shost_getConnectedDevices(false)) {
+    if(!shost_getConnectedDevices(NULL)) {
         printf("No devices found. Ensure your device is connected and the proper UDEV rules have been added.\n");
         retVal = -1;
         goto CLEANUP;

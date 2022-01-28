@@ -11,6 +11,8 @@
 
 const char *argp_program_bug_address = "https://github.com/stephendpmurphy/shost/issues";
 const char *github_repository_address = "https://github.com/stephendpmurphy/shost";
+shost_connected_devices_t devices = {0x00};
+int Devcount = 0;
 char *outputFilePath = NULL;
 FILE *outBin = NULL;
 
@@ -193,7 +195,11 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
             break;
 
         case 777:
-            shost_getConnectedDevices(true);
+            Devcount = shost_getConnectedDevices(&devices);
+            printf("Number of FTDI devices found: %d\n", Devcount);
+            for(int i = 0; i < Devcount; i++) {
+                printf("\nDevice %d:\nManufacturer: %s\nDescription: %s\n", i, devices.info[i].manufacturer, devices.info[i].description);
+            }
             return 1;
 
         case ARGP_KEY_END:

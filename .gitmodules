@@ -1,6 +1,6 @@
 [submodule "vendor/libmpsse"]
 	path = vendor/libmpsse
-	url = https://github.com/l29ah/libmpsse.git
+	url = https://github.com/stephendpmurphy/libmpsse-1.git
 [submodule "vendor/libftdi"]
 	path = vendor/libftdi
 	url = https://github.com/stephendpmurphy/libftdi

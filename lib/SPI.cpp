@@ -8,6 +8,32 @@
 #include "mpsse.h"
 
 #define MAX_SPI_CLK_RATE 6000000
+
+static struct mpsse_context *mpsse_openContext(enum modes mode, int freq, int endianess, int interface) {
+    int i = 0;
+    struct mpsse_context *mpsse = NULL;
+
+    for(i=0; mpsse_supported_devices[i].vid != 0; i++)
+    {
+        if((mpsse = Open(mpsse_supported_devices[i].vid, mpsse_supported_devices[i].pid, mode, freq, endianess, interface, NULL, NULL)) != NULL)
+        {
+            if(mpsse->open)
+            {
+                mpsse->description = mpsse_supported_devices[i].description;
+                break;
+            }
+            /* If there is another device still left to try, free the context pointer and try again */
+            else if(mpsse_supported_devices[i+1].vid != 0)
+            {
+                Close(mpsse);
+                mpsse = NULL;
+            }
+        }
+    }
+
+	return mpsse;
+}
+
 /**
  * @brief SPI Controller
  */
@@ -28,7 +54,7 @@ void SPI::_write(shost_xfer_t *xfer) {
     }
 
     // Open an MPSSE instance for SPI0 and store the context
-    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
+    this->mpsse = mpsse_openContext(modes::SPI0, xfer->clk, MSB, xfer->channel);
 
     // Ensure the context is not NULL and and the mpsse channel is open
     if (this->mpsse != NULL && !this->mpsse->open) {
@@ -68,7 +94,7 @@ void SPI::_read(shost_xfer_t *xfer) {
     }
 
     // Open an MPSSE instance for SPI0 and store the context
-    this->mpsse = MPSSE(modes::SPI0, xfer->clk, MSB);
+    this->mpsse = mpsse_openContext(modes::SPI0, xfer->clk, MSB, xfer->channel);
 
     // Ensure the context is not NULL and and the mpsse channel is open
     if (this->mpsse != NULL && !this->mpsse->open) {

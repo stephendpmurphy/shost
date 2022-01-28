@@ -91,7 +91,7 @@ int shost_xfer_begin(shost_xfer_t *xfer) {
 
         default:
             retVal = -1;
-            printf("Invalid interface type given.\n");
+            printf("Invalid transport layer type given.\n");
             goto CLEANUP;
             break;
     }
@@ -99,12 +99,13 @@ int shost_xfer_begin(shost_xfer_t *xfer) {
     if ( (xfer->xferType <= XFER_TYPE_NONE) || (xfer->xferType >= XFER_TYPE__MAX__) ) {
         printf("Invalid transfer type given.\n");
         retVal = -1;
+        goto CLEANUP;
     }
     else {
-        printf("Starting a %s using %s on channel %d with a len of %d bytes at %dHz.\n",
+        printf("Starting a %s using %s on channel %s with a len of %d bytes at %dHz.\n",
                 (xfer->xferType == XFER_TYPE_WRITE ? "WRITE" : (xfer->xferType == XFER_TYPE_READ ? "READ" : (xfer->xferType == XFER_TYPE_READ_WRITE ? "READ/WRITE" : "?"))),
                 IO->name,
-                xfer->channel,
+                (xfer->channel == XFER_CH_A ? "A" : (xfer->channel == XFER_CH_B ? "B" : (xfer->channel == XFER_CH_C ? "C" : (xfer->channel == XFER_CH_D ? "D" : "?")))),
                 (xfer->xferType == XFER_TYPE_WRITE ? xfer->tx_len: (xfer->xferType == XFER_TYPE_READ ? xfer->rx_len : (xfer->xferType == XFER_TYPE_READ_WRITE ? xfer->tx_len : 0))),
                 xfer->clk);
 
@@ -117,7 +118,7 @@ int shost_xfer_begin(shost_xfer_t *xfer) {
                     break;
 
                 case XFER_TYPE_READ:
-                    // As a cleanup - Since ware reading - Zero out the tx length
+                    // As a cleanup - Since we are reading - Zero out the tx length
                     xfer->tx_len = 0;
                     IO->read(xfer);
                     break;

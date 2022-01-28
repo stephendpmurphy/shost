@@ -37,21 +37,29 @@ typedef enum {
     XFER_TYPE__MAX__        /* __MAX__ transfer */
 } shost_xfer_type_t;
 
+typedef enum {
+    XFER_CH_A = 0x00,
+    XFER_CH_B,
+    XFER_CH_C,
+    XFER_CH_D,
+    XFER_CH__MAX__
+} shost_xfer_channel_t;
+
 /**
  * @brief shost transfer object
  */
 typedef struct {
-    int clk;                    /* Transfer clock rate */
-    int channel;                /* MPSSE device channel (A, B, C, D) */
-    int tx_len;                 /* Transfer transmit length */
-    int rx_len;                 /* Transfer receive length */
-    int bytesTranferred;        /* Number of bytes actually transmitted */
-    int address;                /* I2C device address */
-    int _register;              /* I2C device register address */
-    shost_xfer_intf_t intf;     /* Transfer interface (SPI or I2C) */
-    shost_xfer_type_t xferType; /* Transfer type (Read, Write, Read/Write) */
-    uint8_t *tx_buff;           /* Pointer to the the Transmit buffer */
-    uint8_t *rx_buff;           /* Pointer to the receive buffer */
+    int clk;                        /* Transfer clock rate */
+    shost_xfer_channel_t channel;   /* MPSSE device channel (A, B, C, D) */
+    int tx_len;                     /* Transfer transmit length */
+    int rx_len;                     /* Transfer receive length */
+    int bytesTranferred;            /* Number of bytes actually transmitted */
+    int address;                    /* I2C device address */
+    int _register;                  /* I2C device register address */
+    shost_xfer_intf_t intf;         /* Transfer interface (SPI or I2C) */
+    shost_xfer_type_t xferType;     /* Transfer type (Read, Write, Read/Write) */
+    uint8_t *tx_buff;               /* Pointer to the the Transmit buffer */
+    uint8_t *rx_buff;               /* Pointer to the receive buffer */
 } shost_xfer_t;
 
 /**

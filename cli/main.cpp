@@ -78,7 +78,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
     shost_xfer_t *xfer_ptr = (shost_xfer_t *)state->input;
 
     switch (key) {
-        case 'i':
+        case 't':
             if((strcmp(arg, "SPI") == 0) || (strcmp(arg, "spi") == 0)) {
                 xfer_ptr->intf = XFER_INTF_SPI;
             }
@@ -92,11 +92,36 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
 
         case 'c':
             if(arg == NULL) {
-                printf("No channel value given. Defaulting to channel 0.\n");
-                xfer_ptr->channel = 0;
+                printf("No channel value given. Defaulting to channel A.\n");
+                xfer_ptr->channel = XFER_CH_A;
             }
             else {
-                xfer_ptr->channel = atoi(arg);
+                switch(arg[0]) {
+                    case 'A':
+                    case 'a':
+                        xfer_ptr->channel = XFER_CH_A;
+                        break;
+
+                    case 'B':
+                    case 'b':
+                        xfer_ptr->channel = XFER_CH_B;
+                        break;
+
+                    case 'C':
+                    case 'c':
+                        xfer_ptr->channel = XFER_CH_C;
+                        break;
+
+                    case 'D':
+                    case 'd':
+                        xfer_ptr->channel = XFER_CH_D;
+                        break;
+
+                    default:
+                        printf("Invalid channel given (%c). Defaulting to channel A.\n", arg[0]);
+                        xfer_ptr->channel = XFER_CH_A;
+                        break;
+                }
             }
             break;
 
@@ -214,9 +239,9 @@ int main(int argc, char *argv[] ) {
     // Generate a list of our available CLI options
     struct argp_option cli_options[] = {
         {0,0,0,0, "General serial options:", 1},
-        {"interface", 'i', "SPI || I2C", 0, "Serial interface selection"},
+        {"transport", 't', "SPI || I2C", 0, "Serial transport layer selection"},
         {"xfer", 'x', "r || w || rw", 0, "Serial transfer type - Read (r), Write (w) or Read/Write (rw)"},
-        {"channel", 'c', "NUM", 0, "MPSSE Channel # - Available channels can be retrieved with the --list option"},
+        {"channel", 'c', "LETTER", 0, "MPSSE Channel - (A, B, C or D)"},
         {"frequency", 'f', "NUM", 0, "Serial communication freqeuncy"},
         {0,0,0,0, "Serial WRITE options:", 2},
         {"data", 'd', "ARRAY", 0, "Comma delimited data to be written in hex (0x0B,0x0E,0x0E,0x0F)"},
@@ -236,13 +261,13 @@ int main(int argc, char *argv[] ) {
     uint8_t TX_BUFFER[MAX_TX_BUFFER_SIZE] = {0x00};
     uint8_t RX_BUFFER[MAX_RX_BUFFER_SIZE] = {0x00};
     volatile shost_xfer_t xfer = {
-        10000, // Clock
-        0, // Channel
-        0, // Tx Length
-        0, // Rx Length
-        0, // Bytes transferred
-        0, // Address
-        0, // Register
+        10000,          // Clock
+        XFER_CH_A,      // Channel
+        0,              // Tx Length
+        0,              // Rx Length
+        0,              // Bytes transferred
+        0,              // Address
+        0,              // Register
         XFER_INTF_NONE, // Interface
         XFER_TYPE_NONE, // Transfer Type
         TX_BUFFER,

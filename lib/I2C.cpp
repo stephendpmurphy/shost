@@ -10,6 +10,31 @@
 #include <system_error>
 #include <cassert>
 
+static struct mpsse_context *mpsse_openContext(enum modes mode, int freq, int endianess, int interface) {
+    int i = 0;
+    struct mpsse_context *mpsse = NULL;
+
+    for(i=0; mpsse_supported_devices[i].vid != 0; i++)
+    {
+        if((mpsse = Open(mpsse_supported_devices[i].vid, mpsse_supported_devices[i].pid, mode, freq, endianess, interface, NULL, NULL)) != NULL)
+        {
+            if(mpsse->open)
+            {
+                mpsse->description = mpsse_supported_devices[i].description;
+                break;
+            }
+            /* If there is another device still left to try, free the context pointer and try again */
+            else if(mpsse_supported_devices[i+1].vid != 0)
+            {
+                Close(mpsse);
+                mpsse = NULL;
+            }
+        }
+    }
+
+	return mpsse;
+}
+
 I2C::I2C(): Protocol("I²C") {
 
 }
@@ -21,7 +46,7 @@ void I2C::_write(shost_xfer_t *xfer) {
 //    assert(xfer->address > 0 && "Address is required!");
 //    assert(xfer->_register >= 0 && "register is required!");
     //    open mpsse device
-    this->mpsse = MPSSE(modes::I2C, xfer->clk, MSB);
+    this->mpsse = mpsse_openContext(modes::I2C, xfer->clk, MSB, xfer->channel);
 
     if (this->mpsse != NULL && !this->mpsse->open) {
         // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
@@ -53,10 +78,8 @@ void I2C::_read(shost_xfer_t *xfer) {
 //    assert(0 >= xfer->address >= 0x7F && "Address is required!");
 //    assert(xfer->_register >= 0 && "register is required!");
 
-    // TODO make freq adjustable
-    printf("Frequency set to 100Khz.\n");
     //    open mpsse device
-    this->mpsse = MPSSE(modes::I2C, ONE_HUNDRED_KHZ, MSB);
+    this->mpsse = mpsse_openContext(modes::I2C, xfer->clk, MSB, xfer->channel);
 
     if (this->mpsse != NULL && !this->mpsse->open) {
         // TODO what should be something like: "Failed to initialize MPSSE: %s\n", ErrorString(this->mpsse)
